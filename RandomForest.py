@@ -1,17 +1,24 @@
-
+import utils
 from pyspark import SparkConf, SparkContext, mllib
 from pyspark.mllib.tree import RandomForest
 
 def trainModel(trainingData):
+	print "\nTrainning Random Forest model started!"
+	utils.logTime()
+
 	model = RandomForest.trainClassifier(trainingData, numClasses=2, categoricalFeaturesInfo={}, 
 											numTrees=3, featureSubsetStrategy="auto", impurity='gini',
 											maxDepth=5, maxBins=32)
 
-	print '\nTraining RandomForest model finished'
+	print '\nTraining Random Forest model finished'
+	utils.logTime()
 	return model
 
 
 def trainOptimalModel(trainingData, testData):
+	print "\nTraining optimal Random Forest model started!"
+	utils.logTime()
+
 	numTreesVals = [3,5,8]
 	featureSubsetStrategyVals = ['auto','all','sqrt','log2','onethird']
 	impurityVals = ['gini', 'entropy']
@@ -69,11 +76,12 @@ def evaluateModel(model, testData):
 
 def logMessage(optimalModel,optimalNumTrees, optimalFeatureSubsetStrategy, optimalMaxDepth, optimalImpurity, optimalBinsVal, minError):
 
-	print "\nOptimal RandomForest Model :"
+	print "\nTraining optimal Random Forest model finished:"
 	print "\tMin Test Error : " + str(minError)
 	print "\toptimal num trees : " + str(optimalNumTrees)
 	print "\toptimal feature subset strategy: " + str(optimalFeatureSubsetStrategy)
 	print "\toptimal impurity : " + str(optimalImpurity)
 	print "\toptimal max depth : " + str(optimalMaxDepth)
 	print "\toptimal bins val : " + str(optimalBinsVal)
+	utils.logTime()
 	#print "\toptimal model : " + optimalModel.toDebugString()

@@ -1,5 +1,6 @@
 import RandomForest
 import DecisionTree
+import utils
 import os
 import sys
 reload(sys)
@@ -18,10 +19,10 @@ def run(searchForOptimal, basepath, filepath):
 		optimalDecisionTreeModel = DecisionTree.trainOptimalModel(trainingData, testData)
 	else:
 		randomForestModel = RandomForest.trainModel(trainingData)
-		RandomForest.evaluateModel(randomForestModel, testData)
+		utils.logMessage("\nTest Error : " + str(RandomForest.evaluateModel(randomForestModel, testData)))
 
 		decisionTreeModel = DecisionTree.trainModel(trainingData)
-		DecisionTree.evaluateModel(decisionTreeModel, testData)
+		utils.logMessage("\nTest Error : " + str(DecisionTree.evaluateModel(decisionTreeModel, testData)))
 
 
 def buildContext():
@@ -40,6 +41,6 @@ def loadData(sc, basepath, filepath):
 if __name__ == '__main__':
 	basepath = '/home/yifei/TestData/data'
 	filepath = 'a9a_data.txt'
-	searchForOptimal = True 
+	searchForOptimal = False 
 	run(searchForOptimal, basepath, filepath)
 
