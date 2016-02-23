@@ -8,15 +8,19 @@ sys.setdefaultencoding('utf-8')
 from pyspark import SparkConf, SparkContext, mllib
 from pyspark.mllib.util import MLUtils
 
-def run(basepath, filepath):
+def run(searchForOptimal, basepath, filepath):
 	sc = buildContext()
 
 	trainingData, testData = loadData(sc, basepath, filepath)
 
-	randomForestModel = RandomForest.trainModel(trainingData)
-	RandomForest.evaluateModel(randomForestModel, testData)
+	if searchForOptimal:
+		optimalRandomForestModel = RandomForest.trainOptimalModel(trainingData)
+		optimalDecisionTreeModel = DecisionTree.trainOptimalModel(trainingData)
+	else:
+		randomForestModel = RandomForest.trainModel(trainingData)
+		decisionTreeModel = DecisionTree.trainModel(trainingData)
 
-	decisionTreeModel = DecisionTree.trainModel(trainingData)
+	RandomForest.evaluateModel(randomForestModel, testData)
 	DecisionTree.evaluateModel(decisionTreeModel, testData)
 
 
@@ -32,19 +36,10 @@ def loadData(sc, basepath, filepath):
 	print '\nLoad data finished'
 	return trainingData, testData
 
-'''
-def modelEvaluation(model, testData):
-	predictions = model.predict(testData.map(lambda x: x.features))
-	labelsAndPredictions = testData.map(lambda lp: lp.label).zip(predictions)
-	testErr = labelsAndPredictions.filter(lambda (v,p): v != p).count()/float(testData.count())
-
-	print "\nTest Error = " + str(testErr)
-	#print "\nLearned classification model:"
-	#print model.toDebugString()
-'''
 
 if __name__ == '__main__':
 	basepath = '/home/yifei/TestData/data'
 	filepath = 'a9a_data.txt'
-	run(basepath, filepath)
+	searchForOptimal = False
+	run(searchForOptimal, basepath, filepath)
 

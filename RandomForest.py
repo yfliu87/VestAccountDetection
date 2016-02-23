@@ -11,6 +11,10 @@ def trainModel(trainingData):
 	return model
 
 
+def trainOptimalModel(trainingData):
+	return None
+
+
 def evaluateModel(model, testData):
 	predictions = model.predict(testData.map(lambda item: item.features))
 	labelsAndPredictions = testData.map(lambda item: item.label).zip(predictions)
