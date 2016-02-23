@@ -12,7 +12,7 @@ def trainModel(trainingData):
 def trainOptimalModel(trainingData, testData):
 	impurityVals = ['gini', 'entropy']
 	maxDepthVals = [3,4,5,6,7]
-	maxBinsVals = [32]
+	maxBinsVals = [8,16,32]
 
 	optimalModel = None
 	optimalMaxDepth = None
@@ -24,10 +24,14 @@ def trainOptimalModel(trainingData, testData):
 		for curImpurity in impurityVals:
 			for curMaxDepth in maxDepthVals:
 				for curMaxBins in maxBinsVals:
-					model = DecisionTree.trainClassifier(trainingData, numClasses=2, categoricalFeaturesInfo={}, 
-														 impurity=curImpurity, maxDepth=curMaxDepth,maxBins=curMaxBins)
+					model = DecisionTree.trainClassifier(trainingData, 
+														 numClasses=2, 
+														 categoricalFeaturesInfo={}, 
+														 impurity=curImpurity, 
+														 maxDepth=curMaxDepth,
+														 maxBins=curMaxBins)
 					testErr = evaluateModel(model, testData)
-					if not minError or testErr < minError:
+					if testErr < minError or not minError:
 						minError = testErr
 						optimalImpurity = curImpurity
 						optimalMaxDepth = curMaxDepth
@@ -51,11 +55,11 @@ def evaluateModel(model, testData):
 
 def logMessage(optimalModel,optimalMaxDepth, optimalImpurity, optimalBinsVal, minError):
 
-	print "\nOptimal DecisionTree Model Evaluation Result:"
+	print "\nOptimal DecisionTree Model :"
 	print "\tMin Test Error : " + str(minError)
 	print "\toptimal impurity : " + str(optimalImpurity)
 	print "\toptimal max depth : " + str(optimalMaxDepth)
 	print "\toptimal bins val : " + str(optimalBinsVal)
-	print "\toptimal model : " + optimalModel.toDebugString()
+	#print "\toptimal model : " + optimalModel.toDebugString()
 
 
