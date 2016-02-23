@@ -11,14 +11,69 @@ def trainModel(trainingData):
 	return model
 
 
-def trainOptimalModel(trainingData):
-	return None
+def trainOptimalModel(trainingData, testData):
+	numTreesVals = [3,5,8]
+	featureSubsetStrategyVals = ['auto','all','sqrt','log2','onethird']
+	impurityVals = ['gini', 'entropy']
+	maxDepthVals = [3,4,5,6,7]
+	maxBinsVals = [8,16,32]
+
+	optimalModel = None
+	optimalNumTrees = None
+	optimalFeatureSubsetStrategy = None
+	optimalMaxDepth = None
+	optimalImpurity = None
+	optimalBinsVal = None
+	minError = None
+
+	try:
+		for curNumTree in numTreesVals:
+			for curFeatureSubsetStrategy in featureSubsetStrategyVals:
+				for curImpurity in impurityVals:
+					for curMaxDepth in maxDepthVals:
+						for curMaxBins in maxBinsVals:
+							model = RandomForest.trainClassifier(trainingData, 
+																numClasses=2, 
+																categoricalFeaturesInfo={}, 
+														 		numTrees=curNumTree,
+														 		featureSubsetStrategy=curFeatureSubsetStrategy,
+														 		impurity=curImpurity, 
+														 		maxDepth=curMaxDepth,
+														 		maxBins=curMaxBins)
+							testErr = evaluateModel(model, testData)
+							if testErr < minError or not minError:
+								minError = testErr
+								optimalNumTrees = curNumTree
+								optimalFeatureSubsetStrategy = curFeatureSubsetStrategy
+								optimalImpurity = curImpurity
+								optimalMaxDepth = curMaxDepth
+								optimalBinsVal = curMaxBins
+								optimalModel = model
+	except:
+		print "\nException during model training with below parameters:"
+		print "\tnum trees: " + str(optimalNumTrees)
+		print "\tfeature subset strategy: " + optimalFeatureSubsetStrategy
+		print "\timpurity: " + str(curImpurity)
+		print "\tmaxDepth: " + str(curMaxDepth)
+		print "\tmaxBins: " + str(curMaxBins)
+
+	logMessage(optimalModel, optimalNumTrees, optimalFeatureSubsetStrategy, optimalMaxDepth, optimalImpurity, optimalBinsVal, minError)
+	return optimalModel 
 
 
 def evaluateModel(model, testData):
 	predictions = model.predict(testData.map(lambda item: item.features))
 	labelsAndPredictions = testData.map(lambda item: item.label).zip(predictions)
-	testErr = labelsAndPredictions.filter(lambda (v,p): v != p).count()/float(testData.count())
+	return labelsAndPredictions.filter(lambda (v,p): v != p).count()/float(testData.count())
 
-	print "\RandomForest Model Evaluation"
-	print "\nTest Error = " + str(testErr)
+
+def logMessage(optimalModel,optimalNumTrees, optimalFeatureSubsetStrategy, optimalMaxDepth, optimalImpurity, optimalBinsVal, minError):
+
+	print "\nOptimal RandomForest Model :"
+	print "\tMin Test Error : " + str(minError)
+	print "\toptimal num trees : " + str(optimalNumTrees)
+	print "\toptimal feature subset strategy: " + str(optimalFeatureSubsetStrategy)
+	print "\toptimal impurity : " + str(optimalImpurity)
+	print "\toptimal max depth : " + str(optimalMaxDepth)
+	print "\toptimal bins val : " + str(optimalBinsVal)
+	#print "\toptimal model : " + optimalModel.toDebugString()
