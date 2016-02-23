@@ -9,15 +9,53 @@ def trainModel(trainingData):
 	return model
 
 
-def trainOptimalModel(trainingData):
-	return None
-	
+def trainOptimalModel(trainingData, testData):
+	impurityVals = ['gini', 'entropy']
+	maxDepthVals = [3,4,5,6,7]
+	maxBinsVals = [32]
+
+	optimalModel = None
+	optimalMaxDepth = None
+	optimalImpurity = None
+	optimalBinsVal = None
+	minError = None
+
+	try:
+		for curImpurity in impurityVals:
+			for curMaxDepth in maxDepthVals:
+				for curMaxBins in maxBinsVals:
+					model = DecisionTree.trainClassifier(trainingData, numClasses=2, categoricalFeaturesInfo={}, 
+														 impurity=curImpurity, maxDepth=curMaxDepth,maxBins=curMaxBins)
+					testErr = evaluateModel(model, testData)
+					if not minError or testErr < minError:
+						minError = testErr
+						optimalImpurity = curImpurity
+						optimalMaxDepth = curMaxDepth
+						optimalBinsVal = curMaxBins
+						optimalModel = model
+	except:
+		print "\nException during model training with below parameters:"
+		print "\timpurity: " + str(curImpurity)
+		print "\tmaxDepth: " + str(curMaxDepth)
+		print "\tmaxBins: " + str(curMaxBins)
+
+	logMessage(optimalModel, optimalMaxDepth, optimalImpurity, optimalBinsVal, minError)
+	return optimalModel 
+
 
 def evaluateModel(model, testData):
 	predictions = model.predict(testData.map(lambda item: item.features))
 	labelsAndPredictions = testData.map(lambda item: item.label).zip(predictions)
 	testErr = labelsAndPredictions.filter(lambda (v,p): v != p).count()/float(testData.count())
+	return testErr
 
-	print "\nDecisionTree Model Evaluation"
-	print "\nTest Error = " + str(testErr)
+def logMessage(optimalModel,optimalMaxDepth, optimalImpurity, optimalBinsVal, minError):
+
+	print "\nOptimal DecisionTree Model Evaluation Result:"
+	print "\tMin Test Error : " + str(minError)
+	print "\toptimal impurity : " + str(optimalImpurity)
+	print "\toptimal max depth : " + str(optimalMaxDepth)
+	print "\toptimal bins val : " + str(optimalBinsVal)
+	print "\toptimal model : " + optimalModel.toDebugString()
+
 
