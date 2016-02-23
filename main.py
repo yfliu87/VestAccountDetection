@@ -14,12 +14,12 @@ def run(searchForOptimal, basepath, filepath):
 	trainingData, testData = loadData(sc, basepath, filepath)
 
 	if searchForOptimal:
-		#optimalRandomForestModel = RandomForest.trainOptimalModel(trainingData)
+		optimalRandomForestModel = RandomForest.trainOptimalModel(trainingData, testData)
 		optimalDecisionTreeModel = DecisionTree.trainOptimalModel(trainingData, testData)
 	else:
-		#randomForestModel = RandomForest.trainModel(trainingData)
-		#RandomForest.evaluateModel(randomForestModel, testData)
-		
+		randomForestModel = RandomForest.trainModel(trainingData)
+		RandomForest.evaluateModel(randomForestModel, testData)
+
 		decisionTreeModel = DecisionTree.trainModel(trainingData)
 		DecisionTree.evaluateModel(decisionTreeModel, testData)
 
