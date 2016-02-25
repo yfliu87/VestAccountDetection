@@ -1,13 +1,14 @@
 from pyspark.mllib.evaluation import BinaryClassificationMetrics
+import utils
 
 def evaluate(model, testData):
+	utils.logMessage("\nModel evaluation result:")
+
 	predictions = model.predict(testData.map(lambda item: item.features))
 	labelsAndPredictions = testData.map(lambda item: item.label).zip(predictions)
+	testErr = labelsAndPredictions.filter(lambda (v,p): v != p).count()/float(testData.count())
+	metrics = BinaryClassificationMetrics(labelsAndPredictions)
 
-	predictionAndLabels = testData.map(lambda item: (float(model.predict(item.features)), item.label))
-	print "Test Error: " + str(predictionAndLabels.filter(lambda (p,v): p != v).count()/float(testData.count()))
-
-	metrics = BinaryClassificationMerics(predictionAndLabels)
-	print "\nArea under PR = %s" %metrics.areaUnderPR
-	print "\nArea under ROC = %s" %metrics.areaUnderROC
-
+	utils.logMessage("\n\tTest Error: " + str(testErr))
+	utils.logMessage("\n\tArea under PR = %s" %metrics.areaUnderPR)
+	utils.logMessage("\n\tArea under ROC = %s" %metrics.areaUnderROC)
