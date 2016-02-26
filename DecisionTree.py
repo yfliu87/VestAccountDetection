@@ -1,6 +1,7 @@
 import utils
 from pyspark import SparkConf, SparkContext, mllib
 from pyspark.mllib.tree import DecisionTree
+import evaluation
 
 
 def trainModel(trainingData):
@@ -37,7 +38,7 @@ def trainOptimalModel(trainingData, testData):
 														 impurity=curImpurity, 
 														 maxDepth=curMaxDepth,
 														 maxBins=curMaxBins)
-					testErr = evaluateModel(model, testData)
+					testErr, PR, ROC = evaluation.evaluate(model, testData)
 					if testErr < minError or not minError:
 						minError = testErr
 						optimalImpurity = curImpurity
@@ -53,12 +54,6 @@ def trainOptimalModel(trainingData, testData):
 	logMessage(optimalModel, optimalMaxDepth, optimalImpurity, optimalBinsVal, minError)
 	return optimalModel 
 
-
-def evaluateModel(model, testData):
-	predictions = model.predict(testData.map(lambda item: item.features))
-	labelsAndPredictions = testData.map(lambda item: item.label).zip(predictions)
-	testErr = labelsAndPredictions.filter(lambda (v,p): v != p).count()/float(testData.count())
-	return testErr
 
 def logMessage(optimalModel,optimalMaxDepth, optimalImpurity, optimalBinsVal, minError):
 

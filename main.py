@@ -25,7 +25,7 @@ def run(searchForOptimal, basepath, filepath):
 		#utils.logMessage("\nTest Error : " + str(RandomForest.evaluateModel(randomForestModel, testData)))
 
 		decisionTreeModel = DecisionTree.trainModel(trainingData)
-		evaluation.evaluate(decisionTreeModel, testData)
+		evaluation.evaluate(decisionTreeModel, testData, logMessage=True)
 		#utils.logMessage("\nTest Error : " + str(DecisionTree.evaluateModel(decisionTreeModel, testData)))
 
 
@@ -45,6 +45,6 @@ def loadData(sc, basepath, filepath):
 if __name__ == '__main__':
 	basepath = '/home/yifei/TestData/data'
 	filepath = 'a9a_data.txt'
-	searchForOptimal = False 
+	searchForOptimal = True 
 	run(searchForOptimal, basepath, filepath)
 
