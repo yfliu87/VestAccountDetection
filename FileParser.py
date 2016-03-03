@@ -61,12 +61,40 @@ def readData(filepath):
 def outputNodesInSameCluster(model, unifiedRDDVecs, rawDataFrame, outputFilePath):
 	centers = unifiedRDDVecs.map(lambda item: model.clusterCenters[model.predict(item)]).collect()
 	rawDataFrame['center'] = centers
-	rawDataFrame.to_csv(outputFilePath, encoding='gbk', index=False)
+	groupUserByCluster(rawDataFrame).to_csv(outputFilePath, encoding='gbk')
 	'''
 	sorted_by_center_df = rawDataFrame.sort(columns='center')
 	sorted_by_center_df.to_csv(target_file_path, encoding='gbk', index=False)
 	'''
 	Utils.logMessage("\nOutput cluster finished")
+
+
+def groupUserByCluster(rawDataFrame):
+	clusterIdxMap = {}
+
+	print type(rawDataFrame.loc[0])
+
+	rows = rawDataFrame.shape[0]
+
+	for i in xrange(rows):
+		cluster = rawDataFrame.loc[i,'center'].tostring()
+
+		if cluster not in clusterIdxMap:
+			clusterIdxMap[cluster] = []
+
+		clusterIdxMap[cluster].append(i)
+
+	assigned = False
+	retDF = None
+	for cluster, indexes in clusterIdxMap.items():
+		for idx in indexes:
+			if not assigned:
+				retDF = pd.DataFrame(rawDataFrame.loc[idx]).T
+				assigned = True
+			else:
+				retDF = retDF.append(rawDataFrame.loc[idx], ignore_index=True)
+
+	return retDF
 
 
 def writeAcctDevIDAddrMap(processedFile, outputMapFile):
