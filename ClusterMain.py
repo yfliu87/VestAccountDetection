@@ -3,7 +3,6 @@ import pandas as pd
 import SpectralCluster
 import RawOrderParser as rop
 import ComputeModule as cm
-import utils
 import codecs
 
 targetFields = ['order_id','buyer_pin','buyer_full_name','buyer_full_address','buyer_mobile','buyer_ip','equipment_id','buyer_city_name','buyer_country_name','buyer_poi']

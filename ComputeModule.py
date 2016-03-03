@@ -1,4 +1,4 @@
-import utils
+import Utils
 import numpy as np
 
 DEFAULT_SIMILARITY = 0.0
@@ -36,7 +36,7 @@ def getAccountDevIDMap(rawDataFrame):
 
 
 def getSimilarityMatrix(rawDataFrame, simWeight):
-	utils.logMessage("\nbuild similarity matrix started")
+	Utils.logMessage("\nbuild similarity matrix started")
 
 	resultHash = {}
 	simMat = []
@@ -59,7 +59,7 @@ def getSimilarityMatrix(rawDataFrame, simWeight):
 
 		simMat.append(simVector)
 
-	utils.logMessage("build similarity matrix finished")
+	Utils.logMessage("build similarity matrix finished")
 	return np.matrix(np.array(simMat))
 
 

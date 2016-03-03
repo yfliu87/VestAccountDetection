@@ -1,6 +1,6 @@
 import os
 import codecs
-import utils
+import Utils
 
 def run(sourceFile, targetFile, targetFields):
 	reader = codecs.open(sourceFile, 'r','gbk')
@@ -25,7 +25,7 @@ def run(sourceFile, targetFile, targetFields):
 	reader.close()
 	writer.close()
 
-	utils.logMessage("\nfilter fields finished")
+	Utils.logMessage("\nfilter fields finished")
 
 
 def filterFields(line, fieldsIdx):
@@ -50,5 +50,5 @@ def truncate(sourceFile, targetFile,):
 	reader.close()
 	writer.close()
 
-	utils.logMessage("\ttruncate file finished")
+	Utils.logMessage("\ttruncate file finished")
 
