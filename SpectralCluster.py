@@ -19,8 +19,6 @@ def getClusters(mat, rawdata, outputFilePath,num_clusters):
 
 	model = kMeans(unifiedRDDVecs,num_clusters)
 
-	#outputNodesInSameCluster(model, unifiedRDDVecs, rawdata, outputFilePath)
-
 	Utils.logMessage("\nspectral cluster finished") 
 
 	return model
@@ -70,16 +68,3 @@ def kMeans(vecs, num_clusters):
 
 	return clusters
 
-
-def outputNodesInSameCluster(model, unifiedRDDVecs, rawdata, target_file_path):
-	Utils.logMessage("\noutput cluster started")
-
-	df = pd.DataFrame(rawdata)
-	centers = unifiedRDDVecs.map(lambda item: model.clusterCenters[model.predict(item)]).collect()
-	df['center'] = centers
-	df.to_csv(target_file_path, encoding='gbk', index=False)
-	'''
-	sorted_by_center_df = df.sort(columns='center')
-	sorted_by_center_df.to_csv(target_file_path, encoding='gbk', index=False)
-	'''
-	Utils.logMessage("\noutput cluster finished")
