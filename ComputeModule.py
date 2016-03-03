@@ -1,7 +1,7 @@
-import Utils
 import numpy as np
-
-DEFAULT_SIMILARITY = 0.0
+import Utils
+import PredefinedValues as preVal
+import PredefinedValues.DEFAULT_SIMILARITY as DEFAULTSIM
 
 
 def getAccountAddressMap(rawDataFrame):
@@ -35,7 +35,7 @@ def getAccountDevIDMap(rawDataFrame):
 	return acct_devid_map
 
 
-def getSimilarityMatrix(rawDataFrame, simWeight):
+def getSimilarityMatrix(rawDataFrame):
 	Utils.logMessage("\nbuild similarity matrix started")
 
 	resultHash = {}
@@ -51,7 +51,7 @@ def getSimilarityMatrix(rawDataFrame, simWeight):
 			elif i > j:
 				sim = resultHash[(j,i)]
 			else:
-				sim = computeSimilarity(rawDataFrame.loc[i], rawDataFrame.loc[j], simWeight)
+				sim = computeSimilarity(rawDataFrame.loc[i], rawDataFrame.loc[j])
 				resultHash[(i,j)] = sim
 
 			print sim
@@ -63,7 +63,9 @@ def getSimilarityMatrix(rawDataFrame, simWeight):
 	return np.matrix(np.array(simMat))
 
 
-def computeSimilarity(user1, user2, simWeight):
+def computeSimilarity(user1, user2):
+	simWeight = preVal.simWeight
+
 	ip_sim = computeIPSim(user1['buyer_ip'], user2['buyer_ip'])
 	tel_sim = computeTelSim(user1['buyer_mobile'], user2['buyer_mobile'])
 	address_sim = computeAddrSim(user1['buyer_full_address'], user2['buyer_full_address'])
@@ -108,7 +110,7 @@ def computeIPSim(ips1, ips2):
 		union = set(ips1).union(set(ips2))
 		return len(intersection)/float(len(union))
 	except:
-		return DEFAULT_SIMILARITY
+		return DEFAULTSIM
 
 
 def computeTelSim(tels1, tels2):
@@ -117,7 +119,7 @@ def computeTelSim(tels1, tels2):
 		union = set(tels1).union(set(tels2))
 		return len(intersection)/float(len(union))
 	except:
-		return DEFAULT_SIMILARITY
+		return DEFAULTSIM
 
 
 def computeAddrSim(adds1, adds2):
@@ -126,7 +128,7 @@ def computeAddrSim(adds1, adds2):
 		union = set(adds1).union(set(adds2))
 		return len(intersection)/float(len(union))
 	except:
-		return DEFAULT_SIMILARITY
+		return DEFAULTSIM
 
 
 def computeDevIDSim(devIDs1, devIDs2):
@@ -135,7 +137,7 @@ def computeDevIDSim(devIDs1, devIDs2):
 		union = set(devIDs1).union(set(devIDs2))
 		return len(intersection)/float(len(union))
 	except:
-		return DEFAULT_SIMILARITY
+		return DEFAULTSIM
 
 
 def computeRecSim(recs1, recs2):
@@ -144,7 +146,7 @@ def computeRecSim(recs1, recs2):
 		union = set(recs1).union(set(recs2))
 		return len(intersection)/float(len(union))
 	except:
-		return DEFAULT_SIMILARITY
+		return DEFAULTSIM
 
 
 def computeCitySim(cities1, cities2):
@@ -154,9 +156,9 @@ def computeCitySim(cities1, cities2):
 			union = set(list(cities1.encode('utf-8'))).union(set(list(cities2.encode('utf-8'))))
 			return len(intersection)/float(len(union))
 		else:
-			return DEFAULT_SIMILARITY
+			return DEFAULTSIM
 	except:
-		return DEFAULT_SIMILARITY
+		return DEFAULTSIM
 
 
 def computeCountySim(county1, county2):
@@ -166,9 +168,9 @@ def computeCountySim(county1, county2):
 			union = set(list(county1.encode('utf-8'))).union(set(list(county2.encode('utf-8'))))
 			return len(intersection)/float(len(union))
 		else:
-			return DEFAULT_SIMILARITY
+			return DEFAULTSIM
 	except:
-		return DEFAULT_SIMILARITY
+		return DEFAULTSIM
 
 
 def computePoiSim(poi1, poi2):
@@ -178,6 +180,6 @@ def computePoiSim(poi1, poi2):
 			union = set(list(poi1.encode('utf-8'))).union(set(list(poi2.encode('utf-8'))))
 			return len(intersection)/float(len(union))
 		else:
-			return DEFAULT_SIMILARITY
+			return DEFAULTSIM
 	except:
-		return DEFAULT_SIMILARITY
+		return DEFAULTSIM
