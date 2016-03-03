@@ -8,14 +8,12 @@ from pyspark.mllib.clustering import KMeans, KMeansModel
 from pyspark import SparkContext
 
 
-def getClusters(mat, rawdata, outputFilePath,num_clusters):
-	sc = SparkContext()
-
+def getClusterModel(mat, rawdata, num_clusters):
 	laplacianMat = getLaplacianMatrix(mat)
 
 	vals, vecs = computeEigenValsVectors(laplacianMat, num_clusters)
 
-	unifiedRDDVecs = sc.parallelize(unification(vecs))
+	unifiedRDDVecs = SparkContext().parallelize(unification(vecs))
 
 	model = kMeans(unifiedRDDVecs,num_clusters)
 
