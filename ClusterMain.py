@@ -1,29 +1,25 @@
 import numpy as np
 import pandas as pd
+import codecs
 import SpectralCluster
 import RawOrderParser as rop
 import ComputeModule as cm
-import codecs
-
-targetFields = ['order_id','buyer_pin','buyer_full_name','buyer_full_address','buyer_mobile','buyer_ip','equipment_id','buyer_city_name','buyer_country_name','buyer_poi']
-
-simWeight = {'buyer_ip':10, 
-			 'buyer_mobile':10, 
-			 'buyer_full_address':10, 
-			 'equipment_id': 10, 
-			 'buyer_full_name':10,
-			 'buyer_city_name':10,
-			 'buyer_county_name':20,
-			 'buyer_poi':20}
+import PredefinedValues as preVal
+import Evaluation as eva
 
 
+def run(trainingFilePath, outputFilePath):
+	rawDataFrame = readData(trainingFilePath)
 
-def run(inputFilePath, outputFilePath):
-	rawDataFrame = readData(inputFilePath)
+	simMat = cm.getSimilarityMatrix(rawDataFrame)
 
-	simMat = cm.getSimilarityMatrix(rawDataFrame, simWeight)
+	model = SpectralCluster.getClusters(simMat, rawDataFrame, outputFilePath, 200)
 
-	SpectralCluster.getClusters(simMat, rawDataFrame, outputFilePath, 200)
+	eva.evaluateModel(model, testFilePath)
+
+	outputNodesInSameCluster(model, unifiedRDDVecs, rawdata, outputFilePath)
+
+
 
 
 def accountAddrMap(rawDataFrame,outputFilePath):

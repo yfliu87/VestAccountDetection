@@ -19,9 +19,11 @@ def getClusters(mat, rawdata, outputFilePath,num_clusters):
 
 	model = kMeans(unifiedRDDVecs,num_clusters)
 
-	outputNodesInSameCluster(model, unifiedRDDVecs, rawdata, outputFilePath)
+	#outputNodesInSameCluster(model, unifiedRDDVecs, rawdata, outputFilePath)
 
 	Utils.logMessage("\nspectral cluster finished") 
+
+	return model
 
 
 def getLaplacianMatrix(mat):
