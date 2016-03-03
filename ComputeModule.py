@@ -1,6 +1,40 @@
 import utils
 import numpy as np
 
+DEFAULT_SIMILARITY = 0.0
+
+
+def getAccountAddressMap(rawDataFrame):
+	acct_addr_map = {}
+	rows = rawDataFrame.shape[0]
+	for i in xrange(rows):
+		record = rawDataFrame.loc[i]
+
+		account = record['buyer_pin']
+		address = combineAdd(record['buyer_city_name'],record['buyer_country_name'],record['buyer_poi'])
+
+		if address not in acct_addr_map:
+			acct_addr_map[address] = []
+
+		acct_addr_map[address].append(account)
+	return acct_addr_map
+
+def getAccountDevIDMap(rawDataFrame):
+	acct_devid_map = {}
+	rows = rawDataFrame.shape[0]
+	for i in xrange(rows):
+		record = rawDataFrame.loc[i]
+
+		account = record['buyer_pin']
+		devid = record['equipment_id']
+
+		if devid not in acct_devid_map:
+			acct_devid_map[devid] = []
+
+		acct_devid_map[devid].append(account)
+	return acct_devid_map
+
+
 def getSimilarityMatrix(rawDataFrame, simWeight):
 	utils.logMessage("\nbuild similarity matrix started")
 
@@ -20,6 +54,7 @@ def getSimilarityMatrix(rawDataFrame, simWeight):
 				sim = computeSimilarity(rawDataFrame.loc[i], rawDataFrame.loc[j], simWeight)
 				resultHash[(i,j)] = sim
 
+			print sim
 			simVector.append(sim)
 
 		simMat.append(simVector)
@@ -37,81 +72,112 @@ def computeSimilarity(user1, user2, simWeight):
 	city_sim = computeCitySim(user1['buyer_city_name'], user2['buyer_city_name'])
 	county_sim = computeCountySim(user1['buyer_country_name'], user2['buyer_country_name'])
 	poi_sim = computePoiSim(user1['buyer_poi'], user2['buyer_poi'])
-
 	return (simWeight['buyer_ip']*ip_sim + simWeight['buyer_mobile']*tel_sim 
 	+ simWeight['buyer_full_address']*address_sim + simWeight['equipment_id']*deviceID_sim 
 	+ simWeight['buyer_full_name']*receiver_sim + simWeight['buyer_city_name']*city_sim 
 	+ simWeight['buyer_county_name']*county_sim + simWeight['buyer_poi']*poi_sim)
 
+	'''
+	add1 = combineAdd(user1['buyer_city_name'],user1['buyer_country_name'],user1['buyer_poi'])
+	add2 = combineAdd(user2['buyer_city_name'],user2['buyer_country_name'],user2['buyer_poi'])
+
+	city_county_poi_sim = computeAddrSim(add1, add2)
+
+	return (simWeight['buyer_ip']*ip_sim + simWeight['buyer_mobile']*tel_sim 
+	+ simWeight['buyer_full_address']*city_county_poi_sim)
+	'''
+	
+
+def combineAdd(city, county, poi):
+	ret = ''
+	if not isinstance(city,float):
+		ret += city.encode('utf-8')
+	
+	if not isinstance(county,float):
+		ret += county.encode('utf-8')
+
+	if not isinstance(poi,float):
+		ret += poi.encode('utf-8')
+
+	return ret
+
 
 def computeIPSim(ips1, ips2):
 	try:
-		intersection = list(set(ips1).intersection(set(ips2)))
-		union = list(set(ips1).union(set(ips2)))
+		intersection = set(ips1).intersection(set(ips2))
+		union = set(ips1).union(set(ips2))
 		return len(intersection)/float(len(union))
 	except:
-		return 0.0
+		return DEFAULT_SIMILARITY
 
 
 def computeTelSim(tels1, tels2):
 	try:
-		intersection = list(set(tels1).intersection(set(tels2)))
-		union = list(set(tels1).union(set(tels2)))
+		intersection = set(tels1).intersection(set(tels2))
+		union = set(tels1).union(set(tels2))
 		return len(intersection)/float(len(union))
 	except:
-		return 0.0
+		return DEFAULT_SIMILARITY
 
 
 def computeAddrSim(adds1, adds2):
 	try:
-		intersection = list(set(adds1).intersection(set(adds2)))
-		union = list(set(adds1).union(set(adds2)))
+		intersection = set(adds1).intersection(set(adds2))
+		union = set(adds1).union(set(adds2))
 		return len(intersection)/float(len(union))
 	except:
-		return 0.0
+		return DEFAULT_SIMILARITY
 
 
 def computeDevIDSim(devIDs1, devIDs2):
 	try:
-		intersection = list(set(devIDs1).intersection(set(devIDs2)))
-		union = list(set(devIDs1).union(set(devIDs2)))
+		intersection = set(devIDs1).intersection(set(devIDs2))
+		union = set(devIDs1).union(set(devIDs2))
 		return len(intersection)/float(len(union))
 	except:
-		return 0.0
+		return DEFAULT_SIMILARITY
 
 
 def computeRecSim(recs1, recs2):
 	try:
-		intersection = list(set(recs1).intersection(set(recs2)))
-		union = list(set(recs1).union(set(recs2)))
+		intersection = set(recs1).intersection(set(recs2))
+		union = set(recs1).union(set(recs2))
 		return len(intersection)/float(len(union))
 	except:
-		return 0.0
+		return DEFAULT_SIMILARITY
 
 
 def computeCitySim(cities1, cities2):
 	try:
-		intersection = list(set(cities1).intersection(set(cities2)))
-		union = list(set(cities1).union(set(cities2)))
-
-		return len(intersection)/float(len(union))
+		if not isinstance(cities1,float) and not isinstance(cities2, float):
+			intersection = set(list(cities1.encode('utf-8'))).intersection(set(list(cities2.encode('utf-8'))))
+			union = set(list(cities1.encode('utf-8'))).union(set(list(cities2.encode('utf-8'))))
+			return len(intersection)/float(len(union))
+		else:
+			return DEFAULT_SIMILARITY
 	except:
-		return 0.0
+		return DEFAULT_SIMILARITY
 
 
-def computeCountySim(counties1, counties2):
+def computeCountySim(county1, county2):
 	try:
-		intersection = list(set(counties1).intersection(set(counties2)))
-		union = list(set(counties1).union(set(counties2)))
-		return len(intersection)/float(len(union))
+		if not isinstance(county1, float) and not isinstance(county2):
+			intersection = set(list(county1.encode('utf-8'))).intersection(set(list(county2.encode('utf-8'))))
+			union = set(list(county1.encode('utf-8'))).union(set(list(county2.encode('utf-8'))))
+			return len(intersection)/float(len(union))
+		else:
+			return DEFAULT_SIMILARITY
 	except:
-		return 0.0
+		return DEFAULT_SIMILARITY
 
 
-def computePoiSim(pois1, pois2):
+def computePoiSim(poi1, poi2):
 	try:
-		intersection = list(set(pois1).intersection(set(pois2)))
-		union = list(set(pois1).union(set(pois2)))
-		return len(intersection)/float(len(union))
+		if not isinstance(county1, float) and not isinstance(county2):
+			intersection = set(list(poi1.encode('utf-8'))).intersection(set(list(poi2.encode('utf-8'))))
+			union = set(list(poi1.encode('utf-8'))).union(set(list(poi2.encode('utf-8'))))
+			return len(intersection)/float(len(union))
+		else:
+			return DEFAULT_SIMILARITY
 	except:
-		return 0.0
+		return DEFAULT_SIMILARITY

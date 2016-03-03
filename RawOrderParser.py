@@ -7,6 +7,7 @@ def run(sourceFile, targetFile, targetFields):
 	writer = codecs.open(targetFile, 'w','gbk')
 
 	line = reader.readline()
+
 	fields = line.split(',')
 	fieldsIdx = [] 
 
@@ -14,6 +15,8 @@ def run(sourceFile, targetFile, targetFields):
 		i = fields.index(item)
 		if i:
 			fieldsIdx.append(i)
+
+	print fieldsIdx
 
 	while line:
 		writer.write(filterFields(line, fieldsIdx))
@@ -35,7 +38,7 @@ def filterFields(line, fieldsIdx):
 	return ret[:-1] + '\n'
 
 
-def shorten(sourceFile, targetFile,):
+def truncate(sourceFile, targetFile,):
 	reader = codecs.open(sourceFile, 'r', 'gbk')
 	writer = codecs.open(targetFile, 'w', 'gbk')
 
@@ -47,5 +50,5 @@ def shorten(sourceFile, targetFile,):
 	reader.close()
 	writer.close()
 
-	utils.logMessage("\nshorten file finished")
+	utils.logMessage("\ttruncate file finished")
 
