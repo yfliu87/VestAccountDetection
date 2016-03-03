@@ -1,11 +1,11 @@
 from __future__ import division
 import scipy.io as scio
+import pandas as pd
+import utils
 from scipy import sparse
 from scipy.sparse.linalg.eigen import arpack
 from numpy import *
 from pyspark.mllib.clustering import KMeans, KMeansModel
-import utils
-import pandas as pd
 from pyspark import SparkContext
 
 def getClusters(mat, rawdata, outputFilePath,num_clusters):
