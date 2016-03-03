@@ -9,4 +9,4 @@ simWeight = {'buyer_ip':10,
 			 'buyer_county_name':20,
 			 'buyer_poi':20}
 
-DEFAULT_SIMILARITY = 0.0
+DEFAULTSIM = 0.0

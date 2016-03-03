@@ -1,43 +1,9 @@
 import numpy as np
 import Utils
 import PredefinedValues as preVal
-import PredefinedValues.DEFAULT_SIMILARITY as DEFAULTSIM
-
-
-def getAccountAddressMap(rawDataFrame):
-	acct_addr_map = {}
-	rows = rawDataFrame.shape[0]
-	for i in xrange(rows):
-		record = rawDataFrame.loc[i]
-
-		account = record['buyer_pin']
-		address = combineAdd(record['buyer_city_name'],record['buyer_country_name'],record['buyer_poi'])
-
-		if address not in acct_addr_map:
-			acct_addr_map[address] = []
-
-		acct_addr_map[address].append(account)
-	return acct_addr_map
-
-def getAccountDevIDMap(rawDataFrame):
-	acct_devid_map = {}
-	rows = rawDataFrame.shape[0]
-	for i in xrange(rows):
-		record = rawDataFrame.loc[i]
-
-		account = record['buyer_pin']
-		devid = record['equipment_id']
-
-		if devid not in acct_devid_map:
-			acct_devid_map[devid] = []
-
-		acct_devid_map[devid].append(account)
-	return acct_devid_map
 
 
 def getSimilarityMatrix(rawDataFrame):
-	Utils.logMessage("\nbuild similarity matrix started")
-
 	resultHash = {}
 	simMat = []
 
@@ -54,12 +20,11 @@ def getSimilarityMatrix(rawDataFrame):
 				sim = computeSimilarity(rawDataFrame.loc[i], rawDataFrame.loc[j])
 				resultHash[(i,j)] = sim
 
-			print sim
 			simVector.append(sim)
 
 		simMat.append(simVector)
 
-	Utils.logMessage("build similarity matrix finished")
+	Utils.logMessage("\nBuild similarity matrix finished")
 	return np.matrix(np.array(simMat))
 
 
@@ -110,7 +75,7 @@ def computeIPSim(ips1, ips2):
 		union = set(ips1).union(set(ips2))
 		return len(intersection)/float(len(union))
 	except:
-		return DEFAULTSIM
+		return preVal.DEFAULTSIM
 
 
 def computeTelSim(tels1, tels2):
@@ -119,7 +84,7 @@ def computeTelSim(tels1, tels2):
 		union = set(tels1).union(set(tels2))
 		return len(intersection)/float(len(union))
 	except:
-		return DEFAULTSIM
+		return preVal.DEFAULTSIM
 
 
 def computeAddrSim(adds1, adds2):
@@ -128,7 +93,7 @@ def computeAddrSim(adds1, adds2):
 		union = set(adds1).union(set(adds2))
 		return len(intersection)/float(len(union))
 	except:
-		return DEFAULTSIM
+		return preVal.DEFAULTSIM
 
 
 def computeDevIDSim(devIDs1, devIDs2):
@@ -137,7 +102,7 @@ def computeDevIDSim(devIDs1, devIDs2):
 		union = set(devIDs1).union(set(devIDs2))
 		return len(intersection)/float(len(union))
 	except:
-		return DEFAULTSIM
+		return preVal.DEFAULTSIM
 
 
 def computeRecSim(recs1, recs2):
@@ -146,7 +111,7 @@ def computeRecSim(recs1, recs2):
 		union = set(recs1).union(set(recs2))
 		return len(intersection)/float(len(union))
 	except:
-		return DEFAULTSIM
+		return preVal.DEFAULTSIM
 
 
 def computeCitySim(cities1, cities2):
@@ -156,9 +121,9 @@ def computeCitySim(cities1, cities2):
 			union = set(list(cities1.encode('utf-8'))).union(set(list(cities2.encode('utf-8'))))
 			return len(intersection)/float(len(union))
 		else:
-			return DEFAULTSIM
+			return preVal.DEFAULTSIM
 	except:
-		return DEFAULTSIM
+		return preVal.DEFAULTSIM
 
 
 def computeCountySim(county1, county2):
@@ -168,9 +133,9 @@ def computeCountySim(county1, county2):
 			union = set(list(county1.encode('utf-8'))).union(set(list(county2.encode('utf-8'))))
 			return len(intersection)/float(len(union))
 		else:
-			return DEFAULTSIM
+			return preVal.DEFAULTSIM
 	except:
-		return DEFAULTSIM
+		return preVal.DEFAULTSIM
 
 
 def computePoiSim(poi1, poi2):
@@ -180,6 +145,37 @@ def computePoiSim(poi1, poi2):
 			union = set(list(poi1.encode('utf-8'))).union(set(list(poi2.encode('utf-8'))))
 			return len(intersection)/float(len(union))
 		else:
-			return DEFAULTSIM
+			return preVal.DEFAULTSIM
 	except:
-		return DEFAULTSIM
+		return preVal.DEFAULTSIM
+
+
+def getAccountAddressMap(rawDataFrame):
+	acct_addr_map = {}
+	rows = rawDataFrame.shape[0]
+	for i in xrange(rows):
+		record = rawDataFrame.loc[i]
+
+		account = record['buyer_pin']
+		address = combineAdd(record['buyer_city_name'],record['buyer_country_name'],record['buyer_poi'])
+
+		if address not in acct_addr_map:
+			acct_addr_map[address] = []
+
+		acct_addr_map[address].append(account)
+	return acct_addr_map
+
+def getAccountDevIDMap(rawDataFrame):
+	acct_devid_map = {}
+	rows = rawDataFrame.shape[0]
+	for i in xrange(rows):
+		record = rawDataFrame.loc[i]
+
+		account = record['buyer_pin']
+		devid = record['equipment_id']
+
+		if devid not in acct_devid_map:
+			acct_devid_map[devid] = []
+
+		acct_devid_map[devid].append(account)
+	return acct_devid_map

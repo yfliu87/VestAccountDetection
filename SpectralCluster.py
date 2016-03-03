@@ -1,12 +1,12 @@
 from __future__ import division
 import scipy.io as scio
-import pandas as pd
 import Utils
 from scipy import sparse
 from scipy.sparse.linalg.eigen import arpack
 from numpy import *
 from pyspark.mllib.clustering import KMeans, KMeansModel
 from pyspark import SparkContext
+
 
 def getClusters(mat, rawdata, outputFilePath,num_clusters):
 	sc = SparkContext()
@@ -19,35 +19,30 @@ def getClusters(mat, rawdata, outputFilePath,num_clusters):
 
 	model = kMeans(unifiedRDDVecs,num_clusters)
 
-	Utils.logMessage("\nspectral cluster finished") 
+	Utils.logMessage("\nSpectral cluster finished") 
 
-	return model
+	return model, unifiedRDDVecs
 
 
 def getLaplacianMatrix(mat):
-	Utils.logMessage("\nconvert to Laplacian Matrix started")
 	D = mat.sum(1)
 	D = sqrt(1/D)
 	n = len(D)
 	D = D.T
 	D = sparse.spdiags(D, 0, n, n)
-	Utils.logMessage("\nconvert finished")
+	Utils.logMessage("\nConvert to Laplacian Matrix finished")
 
 	return D * mat * D
 
 def computeEigenValsVectors(mat, num_clusters):
-	Utils.logMessage("\ncompute eigen values vectors started")
-
 	eigenVals, eigenVecs = arpack.eigs(mat, k = num_clusters, tol=0, which = "LM")
 
-	Utils.logMessage("\ncompute finished")
+	Utils.logMessage("\nCompute eigen values vectors  finished")
 
 	return eigenVals, eigenVecs
 
 
 def unification(vecs):
-	Utils.logMessage("\nunification started")
-
 	sq_sum = sqrt(multiply(vecs, vecs).sum(1))
 	rows,cols = shape(vecs)
 
@@ -55,16 +50,14 @@ def unification(vecs):
 		for j in xrange(cols):
 			vecs[i,j] = vecs[i,j]/sq_sum[i]
 
-	Utils.logMessage("\nunification finished")
+	Utils.logMessage("\nUnification finished")
 	return vecs
 
 
 def kMeans(vecs, num_clusters):
-	Utils.logMessage("\nkmean cluster started")
-
 	clusters = KMeans.train(vecs, num_clusters, maxIterations=10, runs=10, initializationMode="random")
 
-	Utils.logMessage("\nkmean cluster finished")
+	Utils.logMessage("\nKmean cluster finished")
 
 	return clusters
 

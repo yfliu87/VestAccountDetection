@@ -1,6 +1,3 @@
-import numpy as np
-import pandas as pd
-import codecs
 import SpectralCluster as sc
 import FileParser as fp
 import ComputeModule as cm
@@ -8,29 +5,33 @@ import PredefinedValues as preVal
 import Evaluation as eva
 
 
-def run(trainingFilePath, outputFilePath):
+def run(trainingFilePath, testFilePath, outputFilePath):
 	rawDataFrame = fp.readData(trainingFilePath)
 
 	simMat = cm.getSimilarityMatrix(rawDataFrame)
 
-	model = sc.getClusters(simMat, rawDataFrame, outputFilePath, 200)
+	model, unifiedRDDVecs = sc.getClusters(simMat, rawDataFrame, outputFilePath, 20)
 
 	eva.evaluateModel(model, testFilePath)
 
-	fp.outputNodesInSameCluster(model, unifiedRDDVecs, rawdata, outputFilePath)
+	fp.outputNodesInSameCluster(model, unifiedRDDVecs, rawDataFrame, outputFilePath)
 
 
 if __name__ == '__main__':
 
 	sourceFile ='/home/yifei/TestData/data/order_raw_20160229.csv' 
 	truncatedFile = '/home/yifei/TestData/data/order_truncated_20160229.csv'
-	fp.shorten(sourceFile,truncatedFile)	
+	fp.truncate(sourceFile,truncatedFile)	
 
 	processedFile = '/home/yifei/TestData/data/order_processed_20160229.csv'
-	fp.run(truncatedFile, processedFile, targetFields)
+	fp.preprocess(truncatedFile, processedFile)
 
 	#train cluster model
-	run(processedFile, '/home/yifei/TestData/data/order_clustered_20160229.csv')
+	trainingFile = processedFile
+	testFile = ''
+	outputFile = '/home/yifei/TestData/data/order_clustered_20160229.csv'
+	run(trainingFile, '', outputFile)
 
 	#output account devID address map
-	fp.getAcctDevIDAddrMap()
+	outputMapFile = '/home/yifei/TestData/data/acct_dev_addr_20160229.csv'
+	fp.writeAcctDevIDAddrMap(processedFile, outputMapFile)
