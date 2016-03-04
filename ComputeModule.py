@@ -1,7 +1,9 @@
+#-*-coding:utf-8-*-
 import numpy as np
 import Utils
 import PredefinedValues as preVal
-import scipy.io as scio
+import math
+
 
 def getSimilarityMatrix(rawDataFrame):
 	rows = rawDataFrame.shape[0]
@@ -79,52 +81,67 @@ def combineAdd(city, county, poi):
 
 def computeIPSim(ips1, ips2):
 	try:
-		intersection = set(ips1).intersection(set(ips2))
-		union = set(ips1).union(set(ips2))
-		return len(intersection)/float(len(union))
+		if not isinstance(ips1, float) and not isinstance(ips2, float):
+			intersection = set(ips1).intersection(set(ips2))
+			union = set(ips1).union(set(ips2))
+			return len(intersection)/float(len(union))
+		else:
+			return preVal.DEFAULTSIM
 	except:
 		return preVal.DEFAULTSIM
 
 
 def computeTelSim(tels1, tels2):
 	try:
-		intersection = set(tels1).intersection(set(tels2))
-		union = set(tels1).union(set(tels2))
-		return len(intersection)/float(len(union))
+		if not isinstance(tels1, float) and not isinstance(tels2, float):
+			intersection = set(tels1).intersection(set(tels2))
+			union = set(tels1).union(set(tels2))
+			return len(intersection)/float(len(union))
+		else:
+			return preVal.DEFAULTSIM
 	except:
 		return preVal.DEFAULTSIM
 
 
 def computeAddrSim(adds1, adds2):
 	try:
-		intersection = set(adds1).intersection(set(adds2))
-		union = set(adds1).union(set(adds2))
-		return len(intersection)/float(len(union))
+		if not isinstance(adds1, float) and not isinstance(adds2, float):
+			intersection = set(list(adds1)).intersection(set(list(adds2)))
+			union = set(list(adds1)).union(set(list(adds2)))
+			return len(intersection)/float(len(union))
+		else:
+			return preVal.DEFAULTSIM
 	except:
 		return preVal.DEFAULTSIM
 
 
 def computeDevIDSim(devIDs1, devIDs2):
 	try:
-		intersection = set(devIDs1).intersection(set(devIDs2))
-		union = set(devIDs1).union(set(devIDs2))
-		return len(intersection)/float(len(union))
+		if not isinstance(devIDs1, float) and not isinstance(devIDs2, float):
+			intersection = set(list(devIDs1)).intersection(set(list(devIDs2)))
+			union = set(list(devIDs1)).union(set(list(devIDs2)))
+			return len(intersection)/float(len(union))
+		else:
+			return preVal.DEFAULTSIM
 	except:
 		return preVal.DEFAULTSIM
 
 
 def computeRecSim(recs1, recs2):
 	try:
-		intersection = set(recs1).intersection(set(recs2))
-		union = set(recs1).union(set(recs2))
-		return len(intersection)/float(len(union))
+		if not isinstance(recs1, float) and not isinstance(recs2, float):
+			intersection = set(list(recs1)).intersection(set(list(recs2)))
+			union = set(list(recs1)).union(set(list(recs2)))
+			return len(intersection)/float(len(union))
+		else:
+			return preVal.DEFAULTSIM
 	except:
 		return preVal.DEFAULTSIM
 
 
 def computeCitySim(cities1, cities2):
 	try:
-		if not isinstance(cities1,float) and not isinstance(cities2, float):
+		if not isinstance(cities1, float) and not isinstance(cities2, float):
 			intersection = set(list(cities1.encode('utf-8'))).intersection(set(list(cities2.encode('utf-8'))))
 			union = set(list(cities1.encode('utf-8'))).union(set(list(cities2.encode('utf-8'))))
 			return len(intersection)/float(len(union))
