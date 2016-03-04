@@ -1,13 +1,16 @@
 import numpy as np
 import Utils
 import PredefinedValues as preVal
-
+import scipy.io as scio
 
 def getSimilarityMatrix(rawDataFrame):
+	rows = rawDataFrame.shape[0]
+	Utils.logMessage("\nBuild similarity matrix of size %d x %d started" %(rows, rows))
+	Utils.logTime()
+
 	resultHash = {}
 	simMat = []
 
-	rows = rawDataFrame.shape[0]
 	for i in xrange(rows):
 		simVector = []
 		for j in xrange(rows):
@@ -24,7 +27,12 @@ def getSimilarityMatrix(rawDataFrame):
 
 		simMat.append(simVector)
 
+		percentage = i/float(rows)
+		if percentage * 10 >= 1 and ((percentage * 100)%10) == 0:
+			print str(int(percentage * 100)) + ' percent finished'
+
 	Utils.logMessage("\nBuild similarity matrix finished")
+	Utils.logTime()
 	return np.matrix(np.array(simMat))
 
 
