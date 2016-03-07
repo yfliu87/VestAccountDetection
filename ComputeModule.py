@@ -9,6 +9,9 @@ import threading
 import time
 
 exitFlag = 0
+idx_sequence = []
+sim_mat_file = '/home/yifei/TestData/data/temp_sim_mat.csv'
+writer = open(sim_mat_file, 'w')
 
 class myThread(threading.Thread):
 	def __init__(self, threadID, name, q, queueLock, rawDataFrame):
@@ -21,11 +24,12 @@ class myThread(threading.Thread):
 
 	def run(self):
 		print "\nStart: " + self.name
-		print process_data(self.name, self.q, self.lock, self.df)
+		process_data(self.name, self.q, self.lock, self.df)
 		print "Exit: " + self.name
 
 
 def process_data(threadName, q, queueLock, rawDataFrame):
+	
 	global exitFlag
 	while not exitFlag:
 		queueLock.acquire()
@@ -35,13 +39,20 @@ def process_data(threadName, q, queueLock, rawDataFrame):
 			queueLock.release()
 
 			sim = computeSim(idx, rawDataFrame)
-			print "\n%s, index : %s, \nsim: %s" %(threadName, idx, sim)
+			global idx_sequence
+			idx_sequence.append(idx)
+			global writer
+			writer.write(sim)
+			writer.write('\n')
+
+			#print "\n%s, index : %s, \nsim: %s" %(threadName, idx, sim)
 			q.task_done()
 		else:
 			queueLock.release()
 
 		time.sleep(1)
 
+	return sim
 
 def computeSim(rowIdx, rawDataFrame):
 	rows = rawDataFrame.shape[0]
@@ -58,7 +69,7 @@ def computeSim(rowIdx, rawDataFrame):
 
 		simVector.append(str(sim))
 
-	return np.array(','.join(simVector))
+	return ','.join(simVector)
 
 
 def getSimilarityMatrixParallel(rawDataFrame):
@@ -68,6 +79,11 @@ def getSimilarityMatrixParallel(rawDataFrame):
 
 	threadList = ["Thread1","Thread2","Thread3","Thread4"]
 	rowIndex = [i for i in xrange(rows)]
+	global writer
+	strIdx = [str(i) for i in rowIndex]
+	writer.write(','.join(strIdx))
+	writer.write('\n')
+
 	queueLock = threading.RLock()
 	threads = []
 	threadID = 1
@@ -96,8 +112,25 @@ def getSimilarityMatrixParallel(rawDataFrame):
 	for t in threads:
 		t.join()
 
+	global writer
+	writer.close()
+
 	Utils.logMessage("\nBuild similarity matrix finished")
 	Utils.logTime()
+
+	return buildSimilarityMatrix()
+
+
+def buildSimilarityMatrix():
+	global sim_mat_file
+	df = pd.read_csv(sim_mat_file)
+	global idx_sequence
+	simVector = []
+
+	for idx in idx_sequence:
+		simVector.append(df.loc[idx])
+
+	return np.matrix(simVector)
 
 
 
