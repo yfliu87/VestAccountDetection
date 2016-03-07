@@ -1,5 +1,6 @@
 #-*-coding:utf-8-*-
 import numpy as np
+import pandas as pd
 import Utils
 import PredefinedValues as preVal
 import math
@@ -10,32 +11,39 @@ def getSimilarityMatrix(rawDataFrame):
 	Utils.logMessage("\nBuild similarity matrix of size %d x %d started" %(rows, rows))
 	Utils.logTime()
 
-	resultHash = {}
-	simMat = []
+	sim_mat_file = '/home/yifei/TestData/data/temp_sim_mat.csv'
+	writer = open(sim_mat_file,'w')
+	index = [str(i) for i in xrange(rows)]
+	writer.write(','.join(index))
+	writer.write('\n')
 
 	for i in xrange(rows):
 		simVector = []
 		for j in xrange(rows):
 			sim = 0.0
 			if i == j:
-				sim = 100
+				sim = 50
 			elif i > j:
-				sim = resultHash[(j,i)]
+				sim = 0.0
 			else:
 				sim = computeSimilarity(rawDataFrame.loc[i], rawDataFrame.loc[j])
-				resultHash[(i,j)] = sim
 
-			simVector.append(sim)
+			simVector.append(str(sim))
 
-		simMat.append(simVector)
+		writer.write(','.join(simVector))
+		writer.write('\n')
 
 		percentage = i/float(rows)
 		if percentage * 10 >= 1 and ((percentage * 100)%10) == 0:
 			print str(int(percentage * 100)) + ' percent finished'
 
+	writer.close()
 	Utils.logMessage("\nBuild similarity matrix finished")
 	Utils.logTime()
-	return np.matrix(np.array(simMat))
+	simArr = pd.read_csv(sim_mat_file)
+	simArrT = simArr.T
+
+	return np.matrix(np.add(simArr, simArrT))
 
 
 def computeSimilarity(user1, user2):
