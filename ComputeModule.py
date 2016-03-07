@@ -29,23 +29,22 @@ class myThread(threading.Thread):
 
 
 def process_data(threadName, q, queueLock, rawDataFrame):
-	
 	global exitFlag
 	while not exitFlag:
 		queueLock.acquire()
 
 		if not q.empty():
 			idx = q.get()
-			queueLock.release()
 
 			sim = computeSim(idx, rawDataFrame)
 			global idx_sequence
 			idx_sequence.append(idx)
+
 			global writer
 			writer.write(sim)
 			writer.write('\n')
 
-			#print "\n%s, index : %s, \nsim: %s" %(threadName, idx, sim)
+			queueLock.release()
 			q.task_done()
 		else:
 			queueLock.release()
@@ -124,11 +123,16 @@ def getSimilarityMatrixParallel(rawDataFrame):
 def buildSimilarityMatrix():
 	global sim_mat_file
 	df = pd.read_csv(sim_mat_file)
+
 	global idx_sequence
 	simVector = []
+	maxIdx = max(idx_sequence)
+	idx = 0
 
-	for idx in idx_sequence:
-		simVector.append(df.loc[idx])
+	while idx <= maxIdx:
+		trueIdx = idx_sequence.index(idx)
+		simVector.append(df.loc[trueIdx])
+		idx += 1
 
 	return np.matrix(simVector)
 
