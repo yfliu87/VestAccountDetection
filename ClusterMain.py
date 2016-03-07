@@ -11,7 +11,7 @@ trainingFile = processedFile
 testFile = ''
 outputFile = '/home/yifei/TestData/data/order_clustered_20160229.csv'
 outputMapFile = '/home/yifei/TestData/data/acct_dev_addr_20160229.csv'
-clusters = 20
+clusters = 2
 
 def run():
 	#truncate raw data to managable amount
@@ -22,16 +22,17 @@ def run():
 
 	rawDataFrame = fp.readData(trainingFile)
 
-	simMat = cm.getSimilarityMatrix(rawDataFrame)
+	#simMat = cm.getSimilarityMatrixSerial(rawDataFrame)
+	cm.getSimilarityMatrixParallel(rawDataFrame)
 
-	model, unifiedRDDVecs = sc.getClusterModel(simMat, rawDataFrame, clusters)
+	#model, unifiedRDDVecs = sc.getClusterModel(simMat, rawDataFrame, clusters)
 
-	eva.evaluateModel(model, testFile)
+	#eva.evaluateModel(model, testFile)
 
-	fp.outputNodesInSameCluster(model, unifiedRDDVecs, rawDataFrame, outputFile)
+	#fp.outputNodesInSameCluster(model, unifiedRDDVecs, rawDataFrame, outputFile)
 
 	#output account devID address map
-	fp.writeAcctDevIDAddrMap(processedFile, outputMapFile)
+	#fp.writeAcctDevIDAddrMap(processedFile, outputMapFile)
 
 
 if __name__ == '__main__':

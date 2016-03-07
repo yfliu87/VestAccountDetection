@@ -4,9 +4,104 @@ import pandas as pd
 import Utils
 import PredefinedValues as preVal
 import math
+import Queue
+import threading
+import time
+
+exitFlag = 0
+
+class myThread(threading.Thread):
+	def __init__(self, threadID, name, q, queueLock, rawDataFrame):
+		threading.Thread.__init__(self)
+		self.threadID = threadID
+		self.name = name
+		self.q = q
+		self.lock = queueLock
+		self.df = rawDataFrame
+
+	def run(self):
+		print "\nStart: " + self.name
+		print process_data(self.name, self.q, self.lock, self.df)
+		print "Exit: " + self.name
 
 
-def getSimilarityMatrix(rawDataFrame):
+def process_data(threadName, q, queueLock, rawDataFrame):
+	global exitFlag
+	while not exitFlag:
+		queueLock.acquire()
+
+		if not q.empty():
+			idx = q.get()
+			queueLock.release()
+
+			sim = computeSim(idx, rawDataFrame)
+			print "\n%s, index : %s, \nsim: %s" %(threadName, idx, sim)
+			q.task_done()
+		else:
+			queueLock.release()
+
+		time.sleep(1)
+
+
+def computeSim(rowIdx, rawDataFrame):
+	rows = rawDataFrame.shape[0]
+	simVector = []
+
+	for i in xrange(rows):
+		sim = 0.0
+		if i == rowIdx:
+			sim = 50
+		elif i < rowIdx:
+			sim = 0.0
+		else:
+			sim = computeSimilarity(rawDataFrame.loc[i], rawDataFrame.loc[rowIdx])
+
+		simVector.append(str(sim))
+
+	return np.array(','.join(simVector))
+
+
+def getSimilarityMatrixParallel(rawDataFrame):
+	rows = rawDataFrame.shape[0]
+	Utils.logMessage("\nBuild similarity matrix of size %d x %d started" %(rows, rows))
+	Utils.logTime()
+
+	threadList = ["Thread1","Thread2","Thread3","Thread4"]
+	rowIndex = [i for i in xrange(rows)]
+	queueLock = threading.RLock()
+	threads = []
+	threadID = 1
+
+	idxQueue = Queue.Queue()
+
+	for tName in threadList:
+		thread = myThread(threadID, tName, idxQueue, queueLock, rawDataFrame)
+		thread.start()
+		threads.append(thread)
+		threadID += 1
+
+	queueLock.acquire()
+	for idx in rowIndex:
+		idxQueue.put(idx)
+
+	queueLock.release()
+
+	idxQueue.join()
+	while idxQueue.qsize() > 0 and (not idxQueue.empty()):
+		pass
+	
+	global exitFlag
+	exitFlag = 1
+
+	for t in threads:
+		t.join()
+
+	Utils.logMessage("\nBuild similarity matrix finished")
+	Utils.logTime()
+
+
+
+def getSimilarityMatrixSerial(rawDataFrame):
 	rows = rawDataFrame.shape[0]
 	Utils.logMessage("\nBuild similarity matrix of size %d x %d started" %(rows, rows))
 	Utils.logTime()
