@@ -16,7 +16,7 @@ def run():
 	#simMat = cm.getSimilarityMatrixParallel(rawDataFrame)
 	simMat = cm.getSimilarityMatrixMultiProcess(rawDataFrame)
 
-	model, unifiedRDDVecs = sc.getClusterModel(simMat, rawDataFrame, pv.clusterNum)
+	model, unifiedRDDVecs = sc.getClusterModel(simMat, rawDataFrame, pv.clusterNum, pv.eigenVecFile)
 
 	eva.evaluateModel(model, unifiedRDDVecs)
 

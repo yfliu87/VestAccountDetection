@@ -54,6 +54,10 @@ def readData(filepath):
 	return pd.read_csv(filepath, encoding='gbk')
 
 
+def outputMatrix(matrix, targetFile):
+	pd.DataFrame(matrix).to_csv(targetFile)
+
+
 def outputNodesInSameCluster(model, unifiedRDDVecs, rawDataFrame, outputFilePath):
 	centers = unifiedRDDVecs.map(lambda item: model.clusterCenters[model.predict(item)]).collect()
 	rawDataFrame['center'] = centers
