@@ -58,10 +58,6 @@ def outputNodesInSameCluster(model, unifiedRDDVecs, rawDataFrame, outputFilePath
 	centers = unifiedRDDVecs.map(lambda item: model.clusterCenters[model.predict(item)]).collect()
 	rawDataFrame['center'] = centers
 	groupUserByCluster(rawDataFrame).to_csv(outputFilePath, encoding='gbk')
-	'''
-	sorted_by_center_df = rawDataFrame.sort(columns='center')
-	sorted_by_center_df.to_csv(target_file_path, encoding='gbk', index=False)
-	'''
 	Utils.logMessage("\nOutput cluster finished")
 
 
