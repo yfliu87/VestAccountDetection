@@ -1,21 +1,10 @@
 #-*-coding:utf-8-*-
 import numpy as np
-import pandas as pd
 import Utils
 import PredefinedValues as preVal
-import math
-import Queue
-import threading
-import time
-
-exitFlag = 0
-idx_sequence = []
-sim_mat_file = '/home/yifei/TestData/data/temp_sim_mat.csv'
-writer = open(sim_mat_file, 'w')
 
 
 def getSimilarityMatrixMultiProcess(rawDataFrame):
-
 	from multiprocessing import Pool
 	rows = rawDataFrame.shape[0]
 	Utils.logMessage("\nBuild similarity matrix of size %d x %d started" %(rows, rows))
@@ -74,7 +63,7 @@ def computePromotionSim(promotions1, promotions2):
 		union = set(proms1).union(set(proms2))
 		return len(intersection)/float(len(union))
 	except:
-		print "promotion except"
+		print "Promotion exception"
 		return preVal.DEFAULTSIM
 
 
@@ -86,7 +75,7 @@ def computeIPSim(buyer_ips1, buyer_ips2):
 		union = set(ips1).union(set(ips2))
 		return len(intersection)/float(len(union))
 	except:
-		print "IP except"
+		print "IP exception"
 		return preVal.DEFAULTSIM
 
 
@@ -101,7 +90,7 @@ def computeDevIDSim(devIDs1, devIDs2):
 		else:
 			return preVal.DEFAULTSIM
 	except:
-		print "DEV except"
+		print "DevID exception"
 		return preVal.DEFAULTSIM
 
 
@@ -112,6 +101,7 @@ def computePoiSim(poi1, poi2):
 
 		fullAdd1 = []
 		fullAdd2 = []
+		
 		for item in pois1:
 			fullAdd1 += item.split('_')
 
