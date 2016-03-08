@@ -21,7 +21,7 @@ processedFile = '/home/yifei/TestData/data/realdata/testdata_processed_20160307.
 trainingFile = processedFile
 testFile = ''
 outputFile = '/home/yifei/TestData/data/realdata/testdata_clustered_20160307.csv'
-clusters = 300
+clusters = 30
 
 def run():
 	#truncate raw data to managable amount
@@ -38,7 +38,7 @@ def run():
 
 	model, unifiedRDDVecs = sc.getClusterModel(simMat, rawDataFrame, clusters)
 
-	#eva.evaluateModel(model, testFile)
+	eva.evaluateModel(model, unifiedRDDVecs)
 
 	fp.outputNodesInSameCluster(model, unifiedRDDVecs, rawDataFrame, outputFile)
 

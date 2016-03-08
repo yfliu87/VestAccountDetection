@@ -1,9 +1,10 @@
 import codecs
 
-def evaluateModel(model, testFilePath):
+def evaluateModel(model, rdd):
 	'''
 	Go through each record in testFile
 	Predict cluster for each of them
 	Output result
 	'''
-	pass
+	sse = model.computeCost(rdd)
+	print "SSE: " + str(sse)
