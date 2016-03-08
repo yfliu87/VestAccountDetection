@@ -11,3 +11,12 @@ simWeight = {'buyer_ip':20,
 			 'promotion_id':20}
 
 DEFAULTSIM = 0.0
+
+sourceFile ='/home/yifei/TestData/data/realdata/testdata_20160307.csv' 
+truncatedFile = '/home/yifei/TestData/data/realdata/testdata_truncated_20160307.csv'
+processedFile = '/home/yifei/TestData/data/realdata/testdata_processed_20160307.csv'
+trainingFile = processedFile
+testFile = ''
+outputFile = '/home/yifei/TestData/data/realdata/testdata_clustered_20160307.csv'
+truncateLineCount = 101
+clusterNum = 30

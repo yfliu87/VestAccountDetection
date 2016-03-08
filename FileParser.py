@@ -1,16 +1,15 @@
 import codecs
 import pandas as pd
 import Utils
-import PredefinedValues as preVal
 import ComputeModule as cm
 
 
-def truncate(sourceFile, targetFile,):
+def truncate(sourceFile, targetFile, truncateLineCount):
 	reader = codecs.open(sourceFile, 'r', 'gbk')
 	writer = codecs.open(targetFile, 'w', 'gbk')
 
 	count = 0
-	while count < 1001:
+	while count < truncateLineCount:
 		writer.write(reader.readline())
 		count +=1
 
@@ -20,9 +19,7 @@ def truncate(sourceFile, targetFile,):
 	Utils.logMessage("\nTruncate file finished")
 
 
-def preprocess(sourceFile, targetFile):
-	targetFields = preVal.targetFields
-
+def preprocess(sourceFile, targetFile, targetFields):
 	reader = codecs.open(sourceFile, 'r','gbk')
 	writer = codecs.open(targetFile, 'w','gbk')
 
