@@ -1,7 +1,6 @@
 import codecs
 import pandas as pd
 import Utils
-import ComputeModule as cm
 
 
 def truncate(sourceFile, targetFile, truncateLineCount):
@@ -90,27 +89,3 @@ def groupUserByCluster(rawDataFrame):
 				retDF = retDF.append(rawDataFrame.loc[idx], ignore_index=True)
 
 	return retDF
-
-
-def writeAcctDevIDAddrMap(processedFile, outputMapFile):
-	rawDataFrame = readData(processedFile)
-
-	acct_addr_map = cm.getAccountAddressMap(rawDataFrame)
-	acct_devid_map = cm.getAccountDevIDMap(rawDataFrame)
-
-	writer = codecs.open(outputMapFile,'w','gbk')
-	for addr, acct in acct_addr_map.items():
-		for devid, acct1 in acct_devid_map.items():
-			intersection = set(acct).intersection(set(acct1))
-			if len(intersection) > 1:
-				writer.write(addr.decode('utf-8'))
-				writer.write(',')
-				writer.write(devid)
-				writer.write(',')
-				for i in intersection:
-					writer.write(i)
-					writer.write(',')
-				
-				writer.write('\n')
-
-	writer.close()

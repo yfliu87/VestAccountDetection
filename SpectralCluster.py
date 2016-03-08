@@ -1,17 +1,16 @@
 from __future__ import division
-import scipy.io as scio
-import Utils
 from scipy import sparse
 from scipy.sparse.linalg.eigen import arpack
 from numpy import *
 from pyspark.mllib.clustering import KMeans, KMeansModel
 from pyspark import SparkContext
+import Utils
 
 
 def getClusterModel(mat, rawdata, num_clusters):
 	laplacianMat = getLaplacianMatrix(mat)
 
-	vals, vecs = computeEigenValsVectors(laplacianMat, num_clusters)
+	vals, vecs = computeEigenValsVectors(laplacianMat)
 
 	unifiedRDDVecs = SparkContext().parallelize(unification(vecs))
 
@@ -32,10 +31,10 @@ def getLaplacianMatrix(mat):
 
 	return D * mat * D
 
-def computeEigenValsVectors(mat, num_clusters):
+def computeEigenValsVectors(mat, num_clusters = 3):
 	eigenVals, eigenVecs = arpack.eigs(mat, k = num_clusters, tol=0, which = "LM")
 
-	Utils.logMessage("\nCompute eigen values vectors  finished")
+	Utils.logMessage("\nCompute eigen values vectors finished")
 
 	return eigenVals, eigenVecs
 
