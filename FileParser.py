@@ -10,7 +10,7 @@ def truncate(sourceFile, targetFile,):
 	writer = codecs.open(targetFile, 'w', 'gbk')
 
 	count = 0
-	while count < 100:
+	while count < 1001:
 		writer.write(reader.readline())
 		count +=1
 
@@ -27,7 +27,7 @@ def preprocess(sourceFile, targetFile):
 	writer = codecs.open(targetFile, 'w','gbk')
 
 	line = reader.readline()
-	fields = line.split(',')
+	fields = line.replace('\n','').split(',')
 	fieldsIdx = [] 
 
 	for item in targetFields:
@@ -45,7 +45,7 @@ def preprocess(sourceFile, targetFile):
 
 
 def filterFields(line, fieldsIdx):
-	fields = line.split(',')
+	fields = line.replace('\n', '').split(',')
 
 	ret = ''
 	for i in fieldsIdx:
@@ -71,8 +71,6 @@ def outputNodesInSameCluster(model, unifiedRDDVecs, rawDataFrame, outputFilePath
 
 def groupUserByCluster(rawDataFrame):
 	clusterIdxMap = {}
-
-	print type(rawDataFrame.loc[0])
 
 	rows = rawDataFrame.shape[0]
 

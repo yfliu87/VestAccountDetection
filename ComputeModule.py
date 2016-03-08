@@ -13,45 +13,29 @@ idx_sequence = []
 sim_mat_file = '/home/yifei/TestData/data/temp_sim_mat.csv'
 writer = open(sim_mat_file, 'w')
 
-class myThread(threading.Thread):
-	def __init__(self, threadID, name, q, queueLock, rawDataFrame):
-		threading.Thread.__init__(self)
-		self.threadID = threadID
-		self.name = name
-		self.q = q
-		self.lock = queueLock
-		self.df = rawDataFrame
 
-	def run(self):
-		print "\nStart: " + self.name
-		process_data(self.name, self.q, self.lock, self.df)
-		print "Exit: " + self.name
+def getSimilarityMatrixMultiProcess(rawDataFrame):
 
+	from multiprocessing import Pool
+	rows = rawDataFrame.shape[0]
+	Utils.logMessage("\nBuild similarity matrix of size %d x %d started" %(rows, rows))
+	Utils.logTime()
 
-def process_data(threadName, q, queueLock, rawDataFrame):
-	global exitFlag
-	while not exitFlag:
-		queueLock.acquire()
+	indexes = [i for i in xrange(rows)]
+	simMat = []
+	pool = Pool(4)
+	for idx in indexes:
+		simMat.append(pool.apply(computeSim, (idx, rawDataFrame)))
 
-		if not q.empty():
-			idx = q.get()
+	pool.close()
+	pool.join()
 
-			sim = computeSim(idx, rawDataFrame)
-			global idx_sequence
-			idx_sequence.append(idx)
+	Utils.logMessage("\nBuild similarity matrix finished")
+	Utils.logTime()
+	mat = np.matrix(simMat)
 
-			global writer
-			writer.write(sim)
-			writer.write('\n')
-
-			queueLock.release()
-			q.task_done()
-		else:
-			queueLock.release()
-
-		time.sleep(1)
-
-	return sim
+	return np.add(mat, mat.T)
+	
 
 def computeSim(rowIdx, rawDataFrame):
 	rows = rawDataFrame.shape[0]
@@ -66,281 +50,78 @@ def computeSim(rowIdx, rawDataFrame):
 		else:
 			sim = computeSimilarity(rawDataFrame.loc[i], rawDataFrame.loc[rowIdx])
 
-		simVector.append(str(sim))
+		simVector.append(sim)
 
-	return ','.join(simVector)
-
-
-def getSimilarityMatrixParallel(rawDataFrame):
-	rows = rawDataFrame.shape[0]
-	Utils.logMessage("\nBuild similarity matrix of size %d x %d started" %(rows, rows))
-	Utils.logTime()
-
-	threadList = ["Thread1","Thread2","Thread3","Thread4"]
-	rowIndex = [i for i in xrange(rows)]
-	global writer
-	strIdx = [str(i) for i in rowIndex]
-	writer.write(','.join(strIdx))
-	writer.write('\n')
-
-	queueLock = threading.RLock()
-	threads = []
-	threadID = 1
-
-	idxQueue = Queue.Queue()
-
-	for tName in threadList:
-		thread = myThread(threadID, tName, idxQueue, queueLock, rawDataFrame)
-		thread.start()
-		threads.append(thread)
-		threadID += 1
-
-	queueLock.acquire()
-	for idx in rowIndex:
-		idxQueue.put(idx)
-
-	queueLock.release()
-
-	idxQueue.join()
-	while idxQueue.qsize() > 0 and (not idxQueue.empty()):
-		pass
-	
-	global exitFlag
-	exitFlag = 1
-
-	for t in threads:
-		t.join()
-
-	global writer
-	writer.close()
-
-	Utils.logMessage("\nBuild similarity matrix finished")
-	Utils.logTime()
-
-	return buildSimilarityMatrix()
-
-
-def buildSimilarityMatrix():
-	global sim_mat_file
-	df = pd.read_csv(sim_mat_file)
-
-	global idx_sequence
-	simVector = []
-	maxIdx = max(idx_sequence)
-	idx = 0
-
-	while idx <= maxIdx:
-		trueIdx = idx_sequence.index(idx)
-		simVector.append(df.loc[trueIdx])
-		idx += 1
-
-	return np.matrix(simVector)
-
-
-
-def getSimilarityMatrixSerial(rawDataFrame):
-	rows = rawDataFrame.shape[0]
-	Utils.logMessage("\nBuild similarity matrix of size %d x %d started" %(rows, rows))
-	Utils.logTime()
-
-	sim_mat_file = '/home/yifei/TestData/data/temp_sim_mat.csv'
-	writer = open(sim_mat_file,'w')
-	index = [str(i) for i in xrange(rows)]
-	writer.write(','.join(index))
-	writer.write('\n')
-
-	for i in xrange(rows):
-		simVector = []
-		for j in xrange(rows):
-			sim = 0.0
-			if i == j:
-				sim = 50
-			elif i > j:
-				sim = 0.0
-			else:
-				sim = computeSimilarity(rawDataFrame.loc[i], rawDataFrame.loc[j])
-
-			simVector.append(str(sim))
-
-		writer.write(','.join(simVector))
-		writer.write('\n')
-
-		percentage = i/float(rows)
-		if percentage * 10 >= 1 and ((percentage * 100)%10) == 0:
-			print str(int(percentage * 100)) + ' percent finished'
-
-	writer.close()
-	Utils.logMessage("\nBuild similarity matrix finished")
-	Utils.logTime()
-	simArr = pd.read_csv(sim_mat_file)
-	simArrT = simArr.T
-
-	return np.matrix(np.add(simArr, simArrT))
+	return simVector
 
 
 def computeSimilarity(user1, user2):
 	simWeight = preVal.simWeight
 
 	ip_sim = computeIPSim(user1['buyer_ip'], user2['buyer_ip'])
-	tel_sim = computeTelSim(user1['buyer_mobile'], user2['buyer_mobile'])
-	address_sim = computeAddrSim(user1['buyer_full_address'], user2['buyer_full_address'])
 	deviceID_sim = computeDevIDSim(user1['equipment_id'], user2['equipment_id'])
-	receiver_sim = computeRecSim(user1['buyer_full_name'], user2['buyer_full_name'])
-	city_sim = computeCitySim(user1['buyer_city_name'], user2['buyer_city_name'])
-	county_sim = computeCountySim(user1['buyer_country_name'], user2['buyer_country_name'])
 	poi_sim = computePoiSim(user1['buyer_poi'], user2['buyer_poi'])
-	return (simWeight['buyer_ip']*ip_sim + simWeight['buyer_mobile']*tel_sim 
-	+ simWeight['buyer_full_address']*address_sim + simWeight['equipment_id']*deviceID_sim 
-	+ simWeight['buyer_full_name']*receiver_sim + simWeight['buyer_city_name']*city_sim 
-	+ simWeight['buyer_county_name']*county_sim + simWeight['buyer_poi']*poi_sim)
+	promotion_sim = computePromotionSim(user1['promotion_id'], user2['promotion_id'])
+	return (simWeight['buyer_ip']*ip_sim + simWeight['equipment_id']*deviceID_sim 
+		+ simWeight['buyer_poi']*poi_sim + simWeight['promotion_id']*promotion_sim)
 
-	'''
-	add1 = combineAdd(user1['buyer_city_name'],user1['buyer_country_name'],user1['buyer_poi'])
-	add2 = combineAdd(user2['buyer_city_name'],user2['buyer_country_name'],user2['buyer_poi'])
-
-	city_county_poi_sim = computeAddrSim(add1, add2)
-
-	return (simWeight['buyer_ip']*ip_sim + simWeight['buyer_mobile']*tel_sim 
-	+ simWeight['buyer_full_address']*city_county_poi_sim)
-	'''
 	
-
-def combineAdd(city, county, poi):
-	ret = ''
-	if not isinstance(city,float):
-		ret += city.encode('utf-8')
-	
-	if not isinstance(county,float):
-		ret += county.encode('utf-8')
-
-	if not isinstance(poi,float):
-		ret += poi.encode('utf-8')
-
-	return ret
-
-
-def computeIPSim(ips1, ips2):
+def computePromotionSim(promotions1, promotions2):
 	try:
-		if not isinstance(ips1, float) and not isinstance(ips2, float):
-			intersection = set(ips1).intersection(set(ips2))
-			union = set(ips1).union(set(ips2))
-			return len(intersection)/float(len(union))
-		else:
-			return preVal.DEFAULTSIM
+		proms1 = promotions1.split('|')
+		proms2 = promotions2.split('|')
+		intersection = set(proms1).intersection(set(proms2))
+		union = set(proms1).union(set(proms2))
+		return len(intersection)/float(len(union))
 	except:
+		print "promotion except"
 		return preVal.DEFAULTSIM
 
 
-def computeTelSim(tels1, tels2):
+def computeIPSim(buyer_ips1, buyer_ips2):
 	try:
-		if not isinstance(tels1, float) and not isinstance(tels2, float):
-			intersection = set(tels1).intersection(set(tels2))
-			union = set(tels1).union(set(tels2))
-			return len(intersection)/float(len(union))
-		else:
-			return preVal.DEFAULTSIM
+		ips1 = buyer_ips1.split('|')
+		ips2 = buyer_ips2.split('|')
+		intersection = set(ips1).intersection(set(ips2))
+		union = set(ips1).union(set(ips2))
+		return len(intersection)/float(len(union))
 	except:
-		return preVal.DEFAULTSIM
-
-
-def computeAddrSim(adds1, adds2):
-	try:
-		if not isinstance(adds1, float) and not isinstance(adds2, float):
-			intersection = set(list(adds1)).intersection(set(list(adds2)))
-			union = set(list(adds1)).union(set(list(adds2)))
-			return len(intersection)/float(len(union))
-		else:
-			return preVal.DEFAULTSIM
-	except:
+		print "IP except"
 		return preVal.DEFAULTSIM
 
 
 def computeDevIDSim(devIDs1, devIDs2):
 	try:
-		if not isinstance(devIDs1, float) and not isinstance(devIDs2, float):
-			intersection = set(list(devIDs1)).intersection(set(list(devIDs2)))
-			union = set(list(devIDs1)).union(set(list(devIDs2)))
+		if isinstance(devIDs1, unicode) and isinstance(devIDs2, unicode):
+			devids1 = devIDs1.split('|')
+			devids2 = devIDs2.split('|')
+			intersection = set(devids1).intersection(set(devids2))
+			union = set(devids1).union(set(devids2))
 			return len(intersection)/float(len(union))
 		else:
 			return preVal.DEFAULTSIM
 	except:
-		return preVal.DEFAULTSIM
-
-
-def computeRecSim(recs1, recs2):
-	try:
-		if not isinstance(recs1, float) and not isinstance(recs2, float):
-			intersection = set(list(recs1)).intersection(set(list(recs2)))
-			union = set(list(recs1)).union(set(list(recs2)))
-			return len(intersection)/float(len(union))
-		else:
-			return preVal.DEFAULTSIM
-	except:
-		return preVal.DEFAULTSIM
-
-
-def computeCitySim(cities1, cities2):
-	try:
-		if not isinstance(cities1, float) and not isinstance(cities2, float):
-			intersection = set(list(cities1.encode('utf-8'))).intersection(set(list(cities2.encode('utf-8'))))
-			union = set(list(cities1.encode('utf-8'))).union(set(list(cities2.encode('utf-8'))))
-			return len(intersection)/float(len(union))
-		else:
-			return preVal.DEFAULTSIM
-	except:
-		return preVal.DEFAULTSIM
-
-
-def computeCountySim(county1, county2):
-	try:
-		if not isinstance(county1, float) and not isinstance(county2):
-			intersection = set(list(county1.encode('utf-8'))).intersection(set(list(county2.encode('utf-8'))))
-			union = set(list(county1.encode('utf-8'))).union(set(list(county2.encode('utf-8'))))
-			return len(intersection)/float(len(union))
-		else:
-			return preVal.DEFAULTSIM
-	except:
+		print "DEV except"
 		return preVal.DEFAULTSIM
 
 
 def computePoiSim(poi1, poi2):
 	try:
-		if not isinstance(county1, float) and not isinstance(county2):
-			intersection = set(list(poi1.encode('utf-8'))).intersection(set(list(poi2.encode('utf-8'))))
-			union = set(list(poi1.encode('utf-8'))).union(set(list(poi2.encode('utf-8'))))
-			return len(intersection)/float(len(union))
-		else:
-			return preVal.DEFAULTSIM
+		pois1 = poi1.split('|')
+		pois2 = poi2.split('|')
+
+		fullAdd1 = []
+		fullAdd2 = []
+		for item in pois1:
+			fullAdd1 += item.split('_')
+
+		for item in pois2:
+			fullAdd2 += item.split('_')
+
+		intersection = set(fullAdd1).intersection(set(fullAdd2))
+		union = set(fullAdd1).union(set(fullAdd2))
+		return len(intersection)/float(len(union))
+
 	except:
+		print "POI exception"
 		return preVal.DEFAULTSIM
-
-
-def getAccountAddressMap(rawDataFrame):
-	acct_addr_map = {}
-	rows = rawDataFrame.shape[0]
-	for i in xrange(rows):
-		record = rawDataFrame.loc[i]
-
-		account = record['buyer_pin']
-		address = combineAdd(record['buyer_city_name'],record['buyer_country_name'],record['buyer_poi'])
-
-		if address not in acct_addr_map:
-			acct_addr_map[address] = []
-
-		acct_addr_map[address].append(account)
-	return acct_addr_map
-
-def getAccountDevIDMap(rawDataFrame):
-	acct_devid_map = {}
-	rows = rawDataFrame.shape[0]
-	for i in xrange(rows):
-		record = rawDataFrame.loc[i]
-
-		account = record['buyer_pin']
-		devid = record['equipment_id']
-
-		if devid not in acct_devid_map:
-			acct_devid_map[devid] = []
-
-		acct_devid_map[devid].append(account)
-	return acct_devid_map
