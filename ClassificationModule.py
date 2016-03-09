@@ -1,5 +1,6 @@
-from pyspark.mllib.clustering import KMeans, KMeansModel
 from pyspark import SparkContext
+from pyspark.mllib.regression import LabeledPoint
+from pyspark.mllib.classification import SVMWithSGD, SVMModel
 import pandas as pd
 import Utils
 
@@ -7,7 +8,7 @@ def process(sc, eigenVecFile, markedClusterFile):
 	filteredEigenVec = sc.textFile(eigenVecFile).map(lambda item: removeVirtualPart(item)).collect()
 	clusterIDs = sc.textFile(markedClusterFile).map(lambda item: extractClusterID(item)).collect()
 	clusterIdEigenVecMapRDD = sc.parallelize(clusterIDs).zip(sc.parallelize(filteredEigenVec))
-
+	labeledClusterIdEigenVecMapRdd = clusterIdEigenVecMapRDD.map(lambda item: LabeledPoint(item[0], item[1]))
 
 def removeVirtualPart(item):
 	return [extractRealPart(sub) for sub in item.split(',')]
