@@ -62,10 +62,10 @@ def outputMatrix(matrix, targetFile):
 def outputNodesInSameCluster(model, unifiedRDDVecs, rawDataFrame, clusterIDCenterFilePath, clusterIDFilePath):
 	centers = unifiedRDDVecs.map(lambda item: model.clusterCenters[model.predict(item)]).collect()
 	rawDataFrame['clusterID'] = convertClusterID(centers)
-	pd.DataFrame(rawDataFrame).to_csv(clusterIDFilePath, encoding='gbk')
+	pd.DataFrame(rawDataFrame).to_csv(clusterIDFilePath, header=False, index=False, encoding='gbk')
 
 	rawDataFrame['center'] = centers
-	groupUserByCluster(rawDataFrame).to_csv(clusterIDCenterFilePath, encoding='gbk')
+	groupUserByCluster(rawDataFrame).to_csv(clusterIDCenterFilePath, index=False, encoding='gbk')
 	Utils.logMessage("\nOutput cluster finished")
 
 
