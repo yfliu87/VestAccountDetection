@@ -23,3 +23,4 @@ clusterIDFile = '/home/yifei/TestData/data/realdata/testdata_clustered_id_201603
 IDFOREACHCLUSTER = 5
 truncateLineCount = 101
 clusterNum = truncateLineCount/IDFOREACHCLUSTER
+dimensionReductionNum = 10

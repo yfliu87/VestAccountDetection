@@ -20,13 +20,13 @@ def run():
 
 	sparkContext = SparkContext()
 
-	model, unifiedRDDVecs = sc.getClusterModel(sparkContext, simMat, rawDataFrame, pv.clusterNum, pv.eigenVecFile)
+	model, unifiedRDDVecs = sc.getClusterModel(sparkContext, simMat, rawDataFrame, pv.clusterNum, pv.dimensionReductionNum, pv.eigenVecFile)
 
 	eva.evaluateModel(model, unifiedRDDVecs)
 
 	fp.outputNodesInSameCluster(model, unifiedRDDVecs, rawDataFrame, pv.clusterIDCenterFile, pv.clusterIDFile)
 
-	classification.process(sparkContext, pv.eigenVecFile, pv.clusterIDFile)
+	classification.process(sparkContext, pv.clusterNum, pv.eigenVecFile, pv.clusterIDFile)
 
 
 if __name__ == '__main__':

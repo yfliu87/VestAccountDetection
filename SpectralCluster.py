@@ -7,10 +7,10 @@ import Utils
 import FileParser as fp
 
 
-def getClusterModel(sc, mat, rawdata, num_clusters, targetEigenVecFile):
+def getClusterModel(sc, mat, rawdata, clusterNum, dimensionReductionNum, targetEigenVecFile):
 	laplacianMat = getLaplacianMatrix(mat)
 
-	vals, vecs = computeEigenValsVectors(laplacianMat)
+	vals, vecs = computeEigenValsVectors(laplacianMat, dimensionReductionNum)
 
 	unifiedEigenVec = unification(vecs)
 
@@ -18,7 +18,7 @@ def getClusterModel(sc, mat, rawdata, num_clusters, targetEigenVecFile):
 
 	unifiedRDDVecs = sc.parallelize(unifiedEigenVec)
 
-	model = kMeans(unifiedRDDVecs,num_clusters)
+	model = kMeans(unifiedRDDVecs,clusterNum)
 
 	Utils.logMessage("\nSpectral cluster finished") 
 
@@ -35,8 +35,8 @@ def getLaplacianMatrix(mat):
 
 	return D * mat * D
 
-def computeEigenValsVectors(mat, num_clusters = 3):
-	eigenVals, eigenVecs = arpack.eigs(mat, k = num_clusters, tol=0, which = "LM")
+def computeEigenValsVectors(mat, dimensionReductionNum):
+	eigenVals, eigenVecs = arpack.eigs(mat, k = dimensionReductionNum, tol=0, which = "LM")
 
 	Utils.logMessage("\nCompute eigen values vectors finished")
 
@@ -55,8 +55,8 @@ def unification(vecs):
 	return vecs
 
 
-def kMeans(vecs, num_clusters):
-	clusters = KMeans.train(vecs, num_clusters, maxIterations=10, runs=10, initializationMode="random")
+def kMeans(vecs, clusterNum):
+	clusters = KMeans.train(vecs, clusterNum, maxIterations=10, runs=10, initializationMode="random")
 
 	Utils.logMessage("\nKmean cluster finished")
 
