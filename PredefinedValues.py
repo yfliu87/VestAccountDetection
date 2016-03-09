@@ -20,5 +20,6 @@ testFile = ''
 eigenVecFile = '/home/yifei/TestData/data/realdata/testdata_eigenVec_20160307.csv'
 clusterIDCenterFile = '/home/yifei/TestData/data/realdata/testdata_clustered_id_center_20160307.csv'
 clusterIDFile = '/home/yifei/TestData/data/realdata/testdata_clustered_id_20160307.csv'
+IDFOREACHCLUSTER = 5
 truncateLineCount = 101
-clusterNum = 20
+clusterNum = truncateLineCount/IDFOREACHCLUSTER
