@@ -20,7 +20,7 @@ def run():
 
 	eva.evaluateModel(model, unifiedRDDVecs)
 
-	fp.outputNodesInSameCluster(model, unifiedRDDVecs, rawDataFrame, pv.outputFile)
+	fp.outputNodesInSameCluster(model, unifiedRDDVecs, rawDataFrame, pv.clusterIDCenterFile, pv.clusterIDFile)
 
 
 if __name__ == '__main__':
