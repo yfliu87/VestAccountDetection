@@ -1,5 +1,6 @@
 import codecs
 import pandas as pd
+import numpy as np
 import Utils
 
 
@@ -60,14 +61,31 @@ def outputMatrix(matrix, targetFile):
 
 def outputNodesInSameCluster(model, unifiedRDDVecs, rawDataFrame, outputFilePath):
 	centers = unifiedRDDVecs.map(lambda item: model.clusterCenters[model.predict(item)]).collect()
+	rawDataFrame['clusterID'] = convertClusterID(centers)
 	rawDataFrame['center'] = centers
 	groupUserByCluster(rawDataFrame).to_csv(outputFilePath, encoding='gbk')
 	Utils.logMessage("\nOutput cluster finished")
 
 
+def convertClusterID(centers):
+	clusterIDMap = {}
+	clusterId = 0
+	ret = []
+
+	for center in centers:
+		scenter = center.tostring()
+		if scenter not in clusterIDMap:
+			clusterIDMap[scenter] = clusterId
+			clusterId += 1
+
+		ret.append(clusterIDMap[scenter])
+
+	Utils.logMessage('\nConvert to cluster ID finished')
+	return ret
+
+
 def groupUserByCluster(rawDataFrame):
 	clusterIdxMap = {}
-
 	rows = rawDataFrame.shape[0]
 
 	for i in xrange(rows):
