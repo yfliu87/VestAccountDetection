@@ -1,4 +1,4 @@
-import codecs
+#-*-coding:utf-8-*-
 
 def evaluateModel(model, rdd):
 	print "SSE: " + str(model.computeCost(rdd))

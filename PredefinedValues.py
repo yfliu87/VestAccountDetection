@@ -1,3 +1,4 @@
+#-*-coding:utf-8-*-
 targetFields = ['order_id','buyer_pin','buyer_full_name','buyer_full_address','buyer_mobile','buyer_ip','equipment_id','buyer_city_name','buyer_country_name','buyer_poi','promotion_id']
 
 simWeight = {'buyer_ip':20, 
@@ -20,7 +21,7 @@ testFile = ''
 eigenVecFile = '/home/yifei/TestData/data/realdata/testdata_eigenVec_20160307.csv'
 clusterIDCenterFile = '/home/yifei/TestData/data/realdata/testdata_clustered_id_center_20160307.csv'
 clusterIDFile = '/home/yifei/TestData/data/realdata/testdata_clustered_id_20160307.csv'
-IDFOREACHCLUSTER = 5
-truncateLineCount = 101
+IDFOREACHCLUSTER = 10
+truncateLineCount = 1001
 clusterNum = truncateLineCount/IDFOREACHCLUSTER
 dimensionReductionNum = 10

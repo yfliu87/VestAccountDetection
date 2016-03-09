@@ -1,5 +1,6 @@
+#-*-coding:utf-8-*-
 from pyspark import SparkContext
-import SpectralCluster as sc
+import ClusterModule as cluster
 import FileParser as fp
 import ComputeModule as cm
 import PredefinedValues as pv
@@ -14,13 +15,11 @@ def run():
 
 	rawDataFrame = fp.readData(pv.trainingFile)
 
-	#simMat = cm.getSimilarityMatrixSerial(rawDataFrame)
-	#simMat = cm.getSimilarityMatrixParallel(rawDataFrame)
 	simMat = cm.getSimilarityMatrixMultiProcess(rawDataFrame)
 
 	sparkContext = SparkContext()
 
-	model, unifiedRDDVecs = sc.getClusterModel(sparkContext, simMat, rawDataFrame, pv.clusterNum, pv.dimensionReductionNum, pv.eigenVecFile)
+	model, unifiedRDDVecs = cluster.getClusterModel(sparkContext, simMat, rawDataFrame, pv.clusterNum, pv.dimensionReductionNum, pv.eigenVecFile)
 
 	eva.evaluateModel(model, unifiedRDDVecs)
 

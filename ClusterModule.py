@@ -1,3 +1,4 @@
+#-*-coding:utf-8-*-
 from __future__ import division
 from scipy import sparse
 from scipy.sparse.linalg.eigen import arpack
@@ -20,7 +21,7 @@ def getClusterModel(sc, mat, rawdata, clusterNum, dimensionReductionNum, targetE
 
 	model = kMeans(unifiedRDDVecs,clusterNum)
 
-	Utils.logMessage("\nSpectral cluster finished") 
+	Utils.logMessage("\nCluster finished") 
 
 	return model, unifiedRDDVecs
 

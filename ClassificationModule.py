@@ -1,7 +1,7 @@
+#-*-coding:utf-8-*-
 from pyspark import SparkContext
 from pyspark.mllib.regression import LabeledPoint
 from pyspark.mllib.tree import DecisionTree, DecisionTreeModel
-import pandas as pd
 import Utils
 import Evaluation as eva
 
