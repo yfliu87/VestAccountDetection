@@ -3,12 +3,11 @@ from scipy import sparse
 from scipy.sparse.linalg.eigen import arpack
 from numpy import *
 from pyspark.mllib.clustering import KMeans, KMeansModel
-from pyspark import SparkContext
 import Utils
 import FileParser as fp
 
 
-def getClusterModel(mat, rawdata, num_clusters, targetEigenVecFile):
+def getClusterModel(sc, mat, rawdata, num_clusters, targetEigenVecFile):
 	laplacianMat = getLaplacianMatrix(mat)
 
 	vals, vecs = computeEigenValsVectors(laplacianMat)
@@ -17,7 +16,7 @@ def getClusterModel(mat, rawdata, num_clusters, targetEigenVecFile):
 
 	fp.outputMatrix(unifiedEigenVec, targetEigenVecFile)
 
-	unifiedRDDVecs = SparkContext().parallelize(unifiedEigenVec)
+	unifiedRDDVecs = sc.parallelize(unifiedEigenVec)
 
 	model = kMeans(unifiedRDDVecs,num_clusters)
 

@@ -1,8 +1,10 @@
+from pyspark import SparkContext
 import SpectralCluster as sc
 import FileParser as fp
 import ComputeModule as cm
 import PredefinedValues as pv
 import Evaluation as eva
+import ClassificationModule as classification
 
 def run():
 	#truncate raw data to managable amount
@@ -16,11 +18,15 @@ def run():
 	#simMat = cm.getSimilarityMatrixParallel(rawDataFrame)
 	simMat = cm.getSimilarityMatrixMultiProcess(rawDataFrame)
 
-	model, unifiedRDDVecs = sc.getClusterModel(simMat, rawDataFrame, pv.clusterNum, pv.eigenVecFile)
+	sparkContext = SparkContext()
+
+	model, unifiedRDDVecs = sc.getClusterModel(sparkContext, simMat, rawDataFrame, pv.clusterNum, pv.eigenVecFile)
 
 	eva.evaluateModel(model, unifiedRDDVecs)
 
 	fp.outputNodesInSameCluster(model, unifiedRDDVecs, rawDataFrame, pv.clusterIDCenterFile, pv.clusterIDFile)
+
+	classification.process(sparkContext, pv.eigenVecFile, pv.clusterIDFile)
 
 
 if __name__ == '__main__':
