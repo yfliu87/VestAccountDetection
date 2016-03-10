@@ -2,6 +2,7 @@
 from pyspark import SparkContext
 from pyspark.mllib.classification import SVMWithSGD, SVMModel
 from pyspark.mllib.tree import DecisionTree, DecisionTreeModel 
+from pyspark.mllib.tree import RandomForest, RandomForestModel 
 from pyspark.mllib.classification import LogisticRegressionWithLBFGS, LogisticRegressionModel
 from pyspark.mllib.regression import LabeledPoint
 from pyspark.mllib.linalg import Vectors
@@ -49,30 +50,38 @@ def run():
 
 	rawData = sparkContext.textFile(pv.mergedAccountFile).map(countByFeatures).map(lambda item: LabeledPoint(item[0], Vectors.dense(item[2:])))
 
-	for ratio in [0.6, 0.7, 0.8]:
-		for maxDepth in [4,5,6,7,8]:
-			for maxBin in [8,16,32]:
-				runWithParam(rawData, ratio, maxDepth, maxBin)
+	for ratio in [0.7, 0.8]:
+		for impurity in ['entropy','gini']:
+			for maxDepth in [5,6,7,8]:
+				for maxBin in [16,32]:
+					runWithParam(rawData, ratio, impurity, maxDepth, maxBin)
 
 
-def runWithParam(rawData, ratio, maxDepth, maxBin):
+def runWithParam(rawData, ratio, impurity, maxDepth, maxBin):
 	trainingSet, testSet = rawData.randomSplit([ratio, 1-ratio])
 
-	decisionTreeModel, trainingError, testError = DecisionTreeProcess(trainingSet, testSet, maxDepth, maxBin)
+	decisionTreeModel, trainingError, testError = DecisionTreeProcess(trainingSet, testSet, impurity, maxDepth, maxBin)
+	print '\nDecision Tree Training Err: %s, Test Err: %s' %(str(trainingError), str(testError))
 
 	writer.write('\nCurrent run ratio %s, maxDepth %s, maxBin %s' %(str(ratio), str(maxDepth), str(maxBin)))
 	writer.write('\n\tDecision Tree TrainingError %s, TestError %s' %(str(trainingError), str(testError)))
 	recordOptimal(trainingError, testError, decisionTreeModel)
 
-	logRegressionModel, trainingError, testError = LogisticRegressionProcess(trainingSet, testSet)
-	writer.write('\n\tLogistic Regression TrainingError %s, TestError %s' %(str(trainingError), str(testError)))
-	recordOptimal(trainingError, testError, logRegressionModel)
+	randomForestModel, trainingError, testError = RandomForestProcess(trainingSet, testSet, impurity, maxDepth, maxBin)
+	print '\nRandom Forest Training Err: %s, Test Err: %s' %(str(trainingError), str(testError))
 
-	'''
+	logRegressionModel, trainingError, testError = LogisticRegressionProcess(trainingSet, testSet)
+	print '\nLogistic Regression Training Err: %s, Test Err: %s' %(str(trainingError), str(testError))
+
+	#writer.write('\n\tLogistic Regression TrainingError %s, TestError %s' %(str(trainingError), str(testError)))
+	#recordOptimal(trainingError, testError, logRegressionModel)
+
 	SVMModel, trainingError, testError = SVMProcess(trainingSet, testSet)
-	writer.write('\n\tSVM TrainingError %s, TestError %s' %(str(trainingError), str(testError)))
-	recordOptimal(trainingError, testError, SVMModel)
-	'''
+	print '\nSVM Training Err: %s, Test Err: %s' %(str(trainingError), str(testError))
+
+	#writer.write('\n\tSVM TrainingError %s, TestError %s' %(str(trainingError), str(testError)))
+	#recordOptimal(trainingError, testError, SVMModel)
+
 
 def countByFeatures(item):
 	items = item.split(',')
@@ -92,10 +101,10 @@ def recordOptimal(trainingError,testError, model):
 		optimalModel = model 
 
 
-def DecisionTreeProcess(trainingSet, testSet, dtMaxDepth, dtMaxBins):
+def DecisionTreeProcess(trainingSet, testSet, imp, dtMaxDepth, dtMaxBins):
 	
 	decisionTreeModel = DecisionTree.trainClassifier(trainingSet, numClasses = 2,categoricalFeaturesInfo={},
-														impurity='gini',maxDepth=dtMaxDepth, maxBins=dtMaxBins)
+														impurity=imp,maxDepth=dtMaxDepth, maxBins=dtMaxBins)
 
 
 	predictions = decisionTreeModel.predict(trainingSet.map(lambda item: item.features))
@@ -108,6 +117,20 @@ def DecisionTreeProcess(trainingSet, testSet, dtMaxDepth, dtMaxBins):
 
 	return decisionTreeModel, trainingError, testError
 
+def RandomForestProcess(trainingSet, testSet, imp, dtMaxDepth, dtMaxBins):
+	randomForestModel = RandomForest.trainClassifier(trainingSet, numClasses = 2, categoricalFeaturesInfo={},
+														numTrees = 3, featureSubsetStrategy="auto",
+														impurity=imp,maxDepth=dtMaxDepth, maxBins=dtMaxBins)
+
+	predictions = randomForestModel.predict(trainingSet.map(lambda item: item.features))
+	trainingLabelsAndPredictions = trainingSet.map(lambda item: item.label).zip(predictions)
+	trainingError = eva.calculateErrorRate(trainingLabelsAndPredictions)
+
+	predictions = randomForestModel.predict(testSet.map(lambda item: item.features))
+	testLabelsAndPredictions = testSet.map(lambda item: item.label).zip(predictions)
+	testError = eva.calculateErrorRate(testLabelsAndPredictions)
+
+	return randomForestModel, trainingError, testError
 
 def LogisticRegressionProcess(trainingSet, testSet):
 	logRegressionModel = LogisticRegressionWithLBFGS.train(trainingSet)
