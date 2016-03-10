@@ -4,6 +4,7 @@ from pyspark.mllib.classification import SVMWithSGD, SVMModel
 from pyspark.mllib.tree import DecisionTree, DecisionTreeModel 
 from pyspark.mllib.tree import RandomForest, RandomForestModel 
 from pyspark.mllib.classification import LogisticRegressionWithLBFGS, LogisticRegressionModel
+from pyspark.mllib.classification import NaiveBayes, NaiveBayesModel
 from pyspark.mllib.regression import LabeledPoint
 from pyspark.mllib.linalg import Vectors
 import pandas as pd
@@ -70,6 +71,12 @@ def runWithParam(rawData, ratio, impurity, maxDepth, maxBin):
 	randomForestModel, trainingError, testError = RandomForestProcess(trainingSet, testSet, impurity, maxDepth, maxBin)
 	print '\nRandom Forest Training Err: %s, Test Err: %s' %(str(trainingError), str(testError))
 
+	naiveBayesModel, trainingError, testError = NaiveBayesProcess(trainingSet, testSet)
+	print '\nNaive Bayes Training Err: %s, Test Err: %s' %(str(trainingError), str(testError))
+
+	#writer.write('\n\tNaive Bayes TrainingError %s, TestError %s' %(str(trainingError), str(testError)))
+	#recordOptimal(trainingError, testError, decisionTreeModel)
+
 	logRegressionModel, trainingError, testError = LogisticRegressionProcess(trainingSet, testSet)
 	print '\nLogistic Regression Training Err: %s, Test Err: %s' %(str(trainingError), str(testError))
 
@@ -131,6 +138,20 @@ def RandomForestProcess(trainingSet, testSet, imp, dtMaxDepth, dtMaxBins):
 	testError = eva.calculateErrorRate(testLabelsAndPredictions)
 
 	return randomForestModel, trainingError, testError
+
+def NaiveBayesProcess(trainingSet, testSet):
+	naiveBayesModel = NaiveBayes.train(trainingSet)
+
+	predictions = naiveBayesModel.predict(trainingSet.map(lambda item: item.features))
+	trainingLabelsAndPredictions = trainingSet.map(lambda item: item.label).zip(predictions)
+	trainingError = eva.calculateErrorRate(trainingLabelsAndPredictions)
+
+	predictions = naiveBayesModel.predict(testSet.map(lambda item: item.features))
+	testLabelsAndPredictions = testSet.map(lambda item: item.label).zip(predictions)
+	testError = eva.calculateErrorRate(testLabelsAndPredictions)
+
+	return naiveBayesModel, trainingError, testError
+
 
 def LogisticRegressionProcess(trainingSet, testSet):
 	logRegressionModel = LogisticRegressionWithLBFGS.train(trainingSet)
