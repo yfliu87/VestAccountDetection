@@ -2,6 +2,7 @@
 from pyspark import SparkContext
 from pyspark.mllib.classification import SVMWithSGD, SVMModel
 from pyspark.mllib.tree import DecisionTree, DecisionTreeModel 
+from pyspark.mllib.classification import LogisticRegressionWithLBFGS, LogisticRegressionModel
 from pyspark.mllib.regression import LabeledPoint
 from pyspark.mllib.linalg import Vectors
 import pandas as pd
@@ -47,24 +48,31 @@ def run():
 	global sparkContext, writer
 
 	rawData = sparkContext.textFile(pv.mergedAccountFile).map(countByFeatures).map(lambda item: LabeledPoint(item[0], Vectors.dense(item[2:])))
-	for maxDepth in [4,5,6]:
-		for maxBin in [8,16,32]:
-			runWithParam(rawData, maxDepth, maxBin)
+
+	for ratio in [0.6, 0.7, 0.8]:
+		for maxDepth in [4,5,6,7,8]:
+			for maxBin in [8,16,32]:
+				runWithParam(rawData, ratio, maxDepth, maxBin)
 
 
-def runWithParam(rawData, maxDepth, maxBin):
-	trainingSet, testSet = rawData.randomSplit([0.6,0.4])
+def runWithParam(rawData, ratio, maxDepth, maxBin):
+	trainingSet, testSet = rawData.randomSplit([ratio, 1-ratio])
 
 	decisionTreeModel, trainingError, testError = DecisionTreeProcess(trainingSet, testSet, maxDepth, maxBin)
 
-	writer.write('\nCurrent run maxDepth %s, maxBin %s' %(str(maxDepth), str(maxBin)))
+	writer.write('\nCurrent run ratio %s, maxDepth %s, maxBin %s' %(str(ratio), str(maxDepth), str(maxBin)))
 	writer.write('\n\tDecision Tree TrainingError %s, TestError %s' %(str(trainingError), str(testError)))
 	recordOptimal(trainingError, testError, decisionTreeModel)
 
+	logRegressionModel, trainingError, testError = LogisticRegressionProcess(trainingSet, testSet)
+	writer.write('\n\tLogistic Regression TrainingError %s, TestError %s' %(str(trainingError), str(testError)))
+	recordOptimal(trainingError, testError, logRegressionModel)
+
+	'''
 	SVMModel, trainingError, testError = SVMProcess(trainingSet, testSet)
 	writer.write('\n\tSVM TrainingError %s, TestError %s' %(str(trainingError), str(testError)))
 	recordOptimal(trainingError, testError, SVMModel)
-
+	'''
 
 def countByFeatures(item):
 	items = item.split(',')
@@ -101,6 +109,20 @@ def DecisionTreeProcess(trainingSet, testSet, dtMaxDepth, dtMaxBins):
 	return decisionTreeModel, trainingError, testError
 
 
+def LogisticRegressionProcess(trainingSet, testSet):
+	logRegressionModel = LogisticRegressionWithLBFGS.train(trainingSet)
+
+	predictions = logRegressionModel.predict(trainingSet.map(lambda item: item.features))
+	trainingLabelsAndPredictions = trainingSet.map(lambda item: item.label).zip(predictions)
+	trainingError = eva.calculateErrorRate(trainingLabelsAndPredictions)
+
+	predictions = logRegressionModel.predict(testSet.map(lambda item: item.features))
+	testLabelsAndPredictions = testSet.map(lambda item: item.label).zip(predictions)
+	testError = eva.calculateErrorRate(testLabelsAndPredictions)
+
+	return logRegressionModel, trainingError, testError
+
+
 def SVMProcess(trainingSet, testSet):
 	
 	SVMModel = SVMWithSGD.train(trainingSet, iterations=100)
@@ -120,7 +142,7 @@ def SVMProcess(trainingSet, testSet):
 if __name__ == '__main__':
 	global sparkContext, writer, optimalModel, minTrainingError, minTestError
 
-	preprocess()
+	#preprocess()
 
 	run()
 
