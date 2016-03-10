@@ -25,27 +25,37 @@ def preprocess():
 	rawDataFrame['label'] = [0 for i in xrange(rawDataFrame.shape[0])]
 	rawDataFrame.to_csv(pv.randomAccountFile, header=False, index=False)
 
-	return merge(pv.confirmedAccountFile, pv.randomAccountFile)
+	merge(pv.mergedAccountFile, [pv.confirmedAccountFile, pv.randomAccountFile])
 
-def merge(file1, file2):
-	fWriter = open(file1, 'a')
-	fReader = open(file2, 'r')
+def merge(targetFile, files):
+	fWriter = open(targetFile, 'w')
 
-	line = fReader.readline()
-	while line:
-		fWriter.write(line)
+	for f in files:
+		fReader = open(f, 'r')
+
 		line = fReader.readline()
+		while line:
+			fWriter.write(line)
+			line = fReader.readline()
 
-	fReader.close()
+		fReader.close()
+
 	fWriter.close()
-	return file1
 
 
-def run(mergedFile, maxDepth, maxBin):
+def run(maxDepth, maxBin):
 	global sparkContext, writer
 
-	rawData = sparkContext.textFile(mergedFile).map(countByFeatures).map(lambda item: LabeledPoint(item[0], Vectors.dense(item[2:])))
+	rawData = sparkContext.textFile(pv.mergedAccountFile).map(countByFeatures).map(lambda item: LabeledPoint(item[0], Vectors.dense(item[2:])))
 	trainingSet, testSet = rawData.randomSplit([0.6,0.4])
+
+	print '\ntraining set size: %s' % str(trainingSet.count())
+	print 'label 1 in training set: %s' % str(trainingSet.filter(lambda item: item.label == 1).count()/float(trainingSet.count()))
+	print 'label 0 in training set: %s' % str(trainingSet.filter(lambda item: item.label == 0).count()/float(trainingSet.count()))
+
+	print '\ntest set size: %s' % str(testSet.count())
+	print 'label 1 in test set: %s' % str(testSet.filter(lambda item: item.label == 1).count()/float(testSet.count()))
+	print 'label 0 in test set: %s' % str(testSet.filter(lambda item: item.label == 0).count()/float(testSet.count()))
 
 	decisionTreeModel, trainingError, testError = DecisionTreeProcess(trainingSet, testSet, maxDepth, maxBin)
 
@@ -110,11 +120,11 @@ def SVMProcess(trainingSet, testSet):
 
 if __name__ == '__main__':
 	global sparkContext, writer, optimalClassificationModel, minTrainingError, minTestError, optimalDepth, optimalBin
-	mergedFile = preprocess()
+	preprocess()
 
 	for maxDepth in [4,5,6]:
 		for maxBin in [8,16,32]:
-			run(mergedFile, maxDepth, maxBin)
+			run(maxDepth, maxBin)
 
 	writer.write('\n\nFinal optimal param\nminTrainingError %s, minTestError %s' %(str(minTrainingError), str(minTestError)))
 	writer.close()
