@@ -43,24 +43,22 @@ def merge(targetFile, files):
 	fWriter.close()
 
 
-def run(maxDepth, maxBin):
+def run():
 	global sparkContext, writer
 
 	rawData = sparkContext.textFile(pv.mergedAccountFile).map(countByFeatures).map(lambda item: LabeledPoint(item[0], Vectors.dense(item[2:])))
+	for maxDepth in [4,5,6]:
+		for maxBin in [8,16,32]:
+			runWithParam(rawData, maxDepth, maxBin)
+
+
+def runWithParam(rawData, maxDepth, maxBin):
 	trainingSet, testSet = rawData.randomSplit([0.6,0.4])
-
-	print '\ntraining set size: %s' % str(trainingSet.count())
-	print 'label 1 in training set: %s' % str(trainingSet.filter(lambda item: item.label == 1).count()/float(trainingSet.count()))
-	print 'label 0 in training set: %s' % str(trainingSet.filter(lambda item: item.label == 0).count()/float(trainingSet.count()))
-
-	print '\ntest set size: %s' % str(testSet.count())
-	print 'label 1 in test set: %s' % str(testSet.filter(lambda item: item.label == 1).count()/float(testSet.count()))
-	print 'label 0 in test set: %s' % str(testSet.filter(lambda item: item.label == 0).count()/float(testSet.count()))
 
 	decisionTreeModel, trainingError, testError = DecisionTreeProcess(trainingSet, testSet, maxDepth, maxBin)
 
-	writer.write('\n\tDecision Tree TrainingError %s, TestError %s' %(str(trainingError), str(testError)))
 	writer.write('\nCurrent run maxDepth %s, maxBin %s' %(str(maxDepth), str(maxBin)))
+	writer.write('\n\tDecision Tree TrainingError %s, TestError %s' %(str(trainingError), str(testError)))
 	recordOptimal(trainingError, testError, decisionTreeModel)
 
 	SVMModel, trainingError, testError = SVMProcess(trainingSet, testSet)
@@ -69,12 +67,13 @@ def run(maxDepth, maxBin):
 
 
 def countByFeatures(item):
-	ipNum = len(item[1].split('|'))
-	devIDNum = len(item[2].split('|'))
-	addrNum = len(item[3].split('|'))
-	promotionNum = len(item[4].split('|'))
+	items = item.split(',')
+	devIDNum = len(items[1].split('|'))
+	ipNum = len(items[2].split('|'))
+	addrNum = len(items[3].split('|'))
+	promotionNum = len(items[4].split('|'))
 
-	return (item[-1], item[0], ipNum, devIDNum, addrNum, promotionNum)
+	return (items[-1], items[0], ipNum, devIDNum, addrNum, promotionNum)
 
 
 def recordOptimal(trainingError,testError, model):
@@ -119,12 +118,11 @@ def SVMProcess(trainingSet, testSet):
 
 
 if __name__ == '__main__':
-	global sparkContext, writer, optimalClassificationModel, minTrainingError, minTestError, optimalDepth, optimalBin
+	global sparkContext, writer, optimalModel, minTrainingError, minTestError
+
 	preprocess()
 
-	for maxDepth in [4,5,6]:
-		for maxBin in [8,16,32]:
-			run(maxDepth, maxBin)
+	run()
 
 	writer.write('\n\nFinal optimal param\nminTrainingError %s, minTestError %s' %(str(minTrainingError), str(minTestError)))
 	writer.close()
