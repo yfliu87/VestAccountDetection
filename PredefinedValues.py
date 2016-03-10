@@ -21,7 +21,13 @@ testFile = ''
 eigenVecFile = '/home/yifei/TestData/data/realdata/testdata_eigenVec_20160307.csv'
 clusterIDCenterFile = '/home/yifei/TestData/data/realdata/testdata_clustered_id_center_20160307.csv'
 clusterIDFile = '/home/yifei/TestData/data/realdata/testdata_clustered_id_20160307.csv'
-IDFOREACHCLUSTER = 10
-truncateLineCount = 1001
+IDFOREACHCLUSTER = 20
+truncateLineCount = 3001
 clusterNum = truncateLineCount/IDFOREACHCLUSTER
-dimensionReductionNum = 10
+dimensionReductionNum = 15
+treeMaxDepth = 3
+treeMaxBins = 8
+
+#below parameters only for classification model
+confirmedAccountFile = ''
+otherAccountFile = '' 
