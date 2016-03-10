@@ -29,5 +29,5 @@ treeMaxDepth = 3
 treeMaxBins = 8
 
 #below parameters only for classification model
-confirmedAccountFile = ''
-otherAccountFile = '' 
+confirmedAccountFile = '/home/yifei/TestData/data/realdata/ruleFilteredAccount.txt'
+randomAccountFile = '/home/yifei/TestData/data/realdata/randomAccount.txt' 

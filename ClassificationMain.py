@@ -1,9 +1,10 @@
 #-*-coding:utf-8-*-
 from pyspark import SparkContext
 from pyspark.mllib.classification import SVMWithSGD, SVMModel
-from pyspark.mllib.classification import DecisionTree, DecisionTreeModel 
+from pyspark.mllib.tree import DecisionTree, DecisionTreeModel 
 from pyspark.mllib.regression import LabeledPoint
 from pyspark.mllib.linalg import Vectors
+import pandas as pd
 import FileParser as fp
 import Evaluation as eva
 import PredefinedValues as pv
@@ -16,15 +17,15 @@ minTestError = 1.0
 
 
 def preprocess():
-	rawDataFrame = fp.readData(pv.confirmedAccountFile)
+	rawDataFrame = pd.read_table(pv.confirmedAccountFile, sep=',')
 	rawDataFrame['label'] = [1 for i in xrange(rawDataFrame.shape[0])]
-	rawDataFrame.to_csv(target1File, header=False, index=False)
+	rawDataFrame.to_csv(pv.confirmedAccountFile, header=False, index=False)
 
-	rawDataFrame = fp.readData(pv.otherAccountFile)
+	rawDataFrame = pd.read_table(pv.randomAccountFile, sep=',')
 	rawDataFrame['label'] = [0 for i in xrange(rawDataFrame.shape[0])]
-	rawDataFrame.to_csv(target2File, header=False, index=False)
+	rawDataFrame.to_csv(pv.randomAccountFile, header=False, index=False)
 
-	return merge(target1File, target2File)
+	return merge(pv.confirmedAccountFile, pv.randomAccountFile)
 
 def merge(file1, file2):
 	fWriter = open(file1, 'a')
@@ -40,11 +41,10 @@ def merge(file1, file2):
 	return file1
 
 
-def run(maxDepth, maxBin):
+def run(mergedFile, maxDepth, maxBin):
 	global sparkContext, writer
 
-	mergedFile = preprocess()
-	rawData = sparkContext.textFile(mergedFile).map(countByFeatures).map(LabeledPoint(item[0], Vectors.dense(item[2:])))
+	rawData = sparkContext.textFile(mergedFile).map(countByFeatures).map(lambda item: LabeledPoint(item[0], Vectors.dense(item[2:])))
 	trainingSet, testSet = rawData.randomSplit([0.6,0.4])
 
 	decisionTreeModel, trainingError, testError = DecisionTreeProcess(trainingSet, testSet, maxDepth, maxBin)
@@ -110,10 +110,11 @@ def SVMProcess(trainingSet, testSet):
 
 if __name__ == '__main__':
 	global sparkContext, writer, optimalClassificationModel, minTrainingError, minTestError, optimalDepth, optimalBin
+	mergedFile = preprocess()
 
 	for maxDepth in [4,5,6]:
 		for maxBin in [8,16,32]:
-			run(maxDepth, maxBin)
+			run(mergedFile, maxDepth, maxBin)
 
 	writer.write('\n\nFinal optimal param\nminTrainingError %s, minTestError %s' %(str(minTrainingError), str(minTestError)))
 	writer.close()
