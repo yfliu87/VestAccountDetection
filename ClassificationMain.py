@@ -20,15 +20,40 @@ minTestError = 1.0
 
 
 def preprocess():
+	
 	rawDataFrame = pd.read_table(pv.confirmedAccountFile, sep=',')
-	rawDataFrame['label'] = [1 for i in xrange(rawDataFrame.shape[0])]
+	rawDataFrame['label'] = [3 for i in xrange(rawDataFrame.shape[0])]
 	rawDataFrame.to_csv(pv.confirmedAccountFile, header=False, index=False)
+
+	rawDataFrame = pd.read_table(pv.rule1AccountFile, sep=',')
+	rawDataFrame['label'] = [2 for i in xrange(rawDataFrame.shape[0])]
+	rawDataFrame.to_csv(pv.rule1AccountFile, header=False, index=False)
+
+	rawDataFrame = pd.read_table(pv.rule2AccountFile, sep=',')
+	rawDataFrame['label'] = [2 for i in xrange(rawDataFrame.shape[0])]
+	rawDataFrame.to_csv(pv.rule2AccountFile, header=False, index=False)
+	
+	rawDataFrame = pd.read_table(pv.rule3AccountFile, sep=',')
+	rawDataFrame['label'] = [2 for i in xrange(rawDataFrame.shape[0])]
+	rawDataFrame.to_csv(pv.rule3AccountFile, header=False, index=False)
+
+	rawDataFrame = pd.read_table(pv.rule4AccountFile, sep=',')
+	rawDataFrame['label'] = [1 for i in xrange(rawDataFrame.shape[0])]
+	rawDataFrame.to_csv(pv.rule4AccountFile, header=False, index=False)
+
+	rawDataFrame = pd.read_table(pv.rule5AccountFile, sep=',')
+	rawDataFrame['label'] = [1 for i in xrange(rawDataFrame.shape[0])]
+	rawDataFrame.to_csv(pv.rule5AccountFile, header=False, index=False)
+
+	rawDataFrame = pd.read_table(pv.rule6AccountFile, sep=',')
+	rawDataFrame['label'] = [0 for i in xrange(rawDataFrame.shape[0])]
+	rawDataFrame.to_csv(pv.rule6AccountFile, header=False, index=False)
 
 	rawDataFrame = pd.read_table(pv.randomAccountFile, sep=',')
 	rawDataFrame['label'] = [0 for i in xrange(rawDataFrame.shape[0])]
 	rawDataFrame.to_csv(pv.randomAccountFile, header=False, index=False)
 
-	merge(pv.mergedAccountFile, [pv.confirmedAccountFile, pv.randomAccountFile])
+	merge(pv.mergedAccountFile, [pv.confirmedAccountFile, pv.randomAccountFile, pv.rule1AccountFile, pv.rule2AccountFile, pv.rule3AccountFile, pv.rule4AccountFile, pv.rule5AccountFile, pv.rule6AccountFile])
 
 def merge(targetFile, files):
 	fWriter = open(targetFile, 'w')
@@ -51,10 +76,10 @@ def run():
 
 	rawData = sparkContext.textFile(pv.mergedAccountFile).map(countByFeatures).map(lambda item: LabeledPoint(item[0], Vectors.dense(item[2:])))
 
-	for ratio in [0.7, 0.8]:
+	for ratio in [0.7]:
 		for impurity in ['entropy','gini']:
-			for maxDepth in [5,6,7,8]:
-				for maxBin in [16,32]:
+			for maxDepth in [4,5,6]:
+				for maxBin in [16, 32]:
 					runWithParam(rawData, ratio, impurity, maxDepth, maxBin)
 
 
@@ -64,10 +89,11 @@ def runWithParam(rawData, ratio, impurity, maxDepth, maxBin):
 	decisionTreeModel, trainingError, testError = DecisionTreeProcess(trainingSet, testSet, impurity, maxDepth, maxBin)
 	print '\nDecision Tree Training Err: %s, Test Err: %s' %(str(trainingError), str(testError))
 
-	writer.write('\nCurrent run ratio %s, maxDepth %s, maxBin %s' %(str(ratio), str(maxDepth), str(maxBin)))
+	writer.write('\nCurrent run ratio %s, maxDepth %s, maxBin %s, impurity %s' %(str(ratio), str(maxDepth), str(maxBin), impurity))
 	writer.write('\n\tDecision Tree TrainingError %s, TestError %s' %(str(trainingError), str(testError)))
 	recordOptimal(trainingError, testError, decisionTreeModel)
 
+	'''
 	randomForestModel, trainingError, testError = RandomForestProcess(trainingSet, testSet, impurity, maxDepth, maxBin)
 	print '\nRandom Forest Training Err: %s, Test Err: %s' %(str(trainingError), str(testError))
 
@@ -83,12 +109,13 @@ def runWithParam(rawData, ratio, impurity, maxDepth, maxBin):
 	#writer.write('\n\tLogistic Regression TrainingError %s, TestError %s' %(str(trainingError), str(testError)))
 	#recordOptimal(trainingError, testError, logRegressionModel)
 
+	#binary classification
 	SVMModel, trainingError, testError = SVMProcess(trainingSet, testSet)
 	print '\nSVM Training Err: %s, Test Err: %s' %(str(trainingError), str(testError))
 
 	#writer.write('\n\tSVM TrainingError %s, TestError %s' %(str(trainingError), str(testError)))
 	#recordOptimal(trainingError, testError, SVMModel)
-
+	'''
 
 def countByFeatures(item):
 	items = item.split(',')
@@ -110,7 +137,7 @@ def recordOptimal(trainingError,testError, model):
 
 def DecisionTreeProcess(trainingSet, testSet, imp, dtMaxDepth, dtMaxBins):
 	
-	decisionTreeModel = DecisionTree.trainClassifier(trainingSet, numClasses = 2,categoricalFeaturesInfo={},
+	decisionTreeModel = DecisionTree.trainClassifier(trainingSet, numClasses = 4,categoricalFeaturesInfo={},
 														impurity=imp,maxDepth=dtMaxDepth, maxBins=dtMaxBins)
 
 
@@ -186,7 +213,7 @@ def SVMProcess(trainingSet, testSet):
 if __name__ == '__main__':
 	global sparkContext, writer, optimalModel, minTrainingError, minTestError
 
-	#preprocess()
+	preprocess()
 
 	run()
 
