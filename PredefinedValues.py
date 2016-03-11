@@ -31,4 +31,10 @@ treeMaxBins = 8
 #below parameters only for classification model
 confirmedAccountFile = '/home/yifei/TestData/data/realdata/ruleFilteredAccount.txt'
 randomAccountFile = '/home/yifei/TestData/data/realdata/randomAccount.txt' 
+rule1AccountFile = '/home/yifei/TestData/data/realdata/output_rule1.txt' 
+rule2AccountFile = '/home/yifei/TestData/data/realdata/output_rule2.txt' 
+rule3AccountFile = '/home/yifei/TestData/data/realdata/output_rule3.txt' 
+rule4AccountFile = '/home/yifei/TestData/data/realdata/output_rule4.txt' 
+rule5AccountFile = '/home/yifei/TestData/data/realdata/output_rule5.txt' 
+rule6AccountFile = '/home/yifei/TestData/data/realdata/output_rule6.txt' 
 mergedAccountFile = '/home/yifei/TestData/data/realdata/mergedAccount.txt' 
