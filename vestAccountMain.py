@@ -11,10 +11,14 @@ def loadModel():
 def demo():
 	sample = sc.take(10)
 	predictedSample = sample.map(lambda item: (item.Label, classificationModel.predict(item.features)))
-	suspeciousAccounts = predictedSample.filter(lambda item: filterSuspecious(item))
+	suspeciousAccounts = predictedSample.filter(filterSuspecious)
 	clusteredSample = suspeciousAccounts.map(lambda item: getSimVector(item)).map(lambda item: clusterModel.centers[clusterModel.predict(item)]).collect()
 	accountMap = accountsByCluster(clusteredSample)
-	
+
+
+def filterSuspecious(item):
+	return item[1] >= 2 or (item[0] >= 2 and item[1] < 2)
+
 
 def run():
 	#preprocess rule output file, mark, combine
