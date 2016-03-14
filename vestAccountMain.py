@@ -9,11 +9,16 @@ def loadModel():
 
 
 def demo():
+	simMatrix = loadSimMatrix()
 	sample = sc.take(10)
 	predictedSample = sample.map(lambda item: (item.Label, classificationModel.predict(item.features)))
 	suspeciousAccounts = predictedSample.filter(filterSuspecious)
-	clusteredSample = suspeciousAccounts.map(lambda item: getSimVector(item)).map(lambda item: clusterModel.centers[clusterModel.predict(item)]).collect()
+	clusteredSample = suspeciousAccounts.map(lambda item: getSimVector(item, simMatrix)).map(lambda item: clusterModel.centers[clusterModel.predict(item)]).collect()
 	accountMap = accountsByCluster(clusteredSample)
+
+
+def loadSimMatrix():
+	return pd.read_csv(pv.simMatrixFilePath)
 
 
 def filterSuspecious(item):
