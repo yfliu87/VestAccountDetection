@@ -10,10 +10,13 @@ def loadModel():
 
 def demo():
 	simMatrix = loadSimMatrix()
-	sample = sc.take(10)
-	predictedSample = sample.map(lambda item: (item.Label, classificationModel.predict(item.features)))
-	suspeciousAccounts = predictedSample.filter(filterSuspecious)
-	clusteredSample = suspeciousAccounts.map(lambda item: getSimVector(item, simMatrix)).map(lambda item: clusterModel.centers[clusterModel.predict(item)]).collect()
+	sampleSize = 10
+	sampleRDD = sc.take(sampleSize)
+	index = [x for x in xrange(sampleSize)]
+	indexedSampleRDD = sampleRDD.zip(index).map(lambda item: (item[1], item[0]))
+	predictedSampleRDD = indexedSampleRDD.map(lambda item: (item[1].Label, classificationModel.predict(item[1].features)))
+	suspeciousAccountsRDD = predictedSampleRDD.filter(filterSuspecious)
+	clusteredSample = suspeciousAccountsRDD.map(lambda item: getSimVector(item[0], simMatrix)).map(lambda item: clusterModel.centers[clusterModel.predict(item)]).collect()
 	accountMap = accountsByCluster(clusteredSample)
 
 
@@ -23,6 +26,10 @@ def loadSimMatrix():
 
 def filterSuspecious(item):
 	return item[1] >= 2 or (item[0] >= 2 and item[1] < 2)
+
+
+def getSimVector(idx, simMatrix):
+	return simMatrix[idx, :]
 
 
 def run():
