@@ -36,9 +36,9 @@ def demo(count):
 			#find accounts within same cluster 
 			predictedCluster = clusterModel.centers[clusterModel.predict(sim)]
 
-			similarAccounts = getClusterAccounts(predictedCluster, clusterAccountMap)
+			clusteredAccounts = getClusterAccounts(predictedCluster, clusterAccountMap)
 
-			newLabel = checkSimilarAccounts(similarAccounts)
+			newLabel = checkSimilarAccounts(record, clusteredAccounts)
 
 			if newLabel >= predictedLabel:
 				print "\nSuspecious account, mark as training data for next round"
@@ -67,7 +67,7 @@ def buildClusterAccountMap(clusterAccountFilePath):
 		if cluster not in clusterAccountMap:
 			clusterAccountMap[cluster] = []
 
-		clusterAccountMap[cluster].append(pin)
+		clusterAccountMap[cluster].append(idx)
 
 
 def calculateSim(df, matSize):
@@ -76,6 +76,20 @@ def calculateSim(df, matSize):
 
 def getClusterAccounts(cluster, clusterAccountMap):
 	return clusterAccountMap[cluster]
+
+
+def checkSimilarAccounts(curAccount, clusteredAccounts):
+	maxSim = 0.0
+	candidateIdx = -1
+	for item in clusteredAccounts:
+		account = df.loc(item)
+		sim = calculateSimilarity(curAccount, account)
+		if sim > maxSim:
+			maxSim = sim
+			candidateIdx = item
+
+	similarLabel = getLabelByIdx(candidateIdx)
+	return similarLabel
 
 def run():
 	#preprocess rule output file, mark, combine
