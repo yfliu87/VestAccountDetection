@@ -11,6 +11,7 @@ import pandas as pd
 import FileParser as fp
 import Evaluation as eva
 import PredefinedValues as pv
+import Utils
 
 sparkContext = SparkContext()
 writer = open('/home/yifei/TestData/data/realdata/classification_50000.csv','w')
@@ -28,10 +29,11 @@ def preprocess():
 	rawDataFrame = pd.read_table(pv.rule1AccountFile, sep=',')
 	rawDataFrame['label'] = [2 for i in xrange(rawDataFrame.shape[0])]
 	rawDataFrame.to_csv(pv.rule1AccountFile, header=False, index=False)
-
+	'''
 	rawDataFrame = pd.read_table(pv.rule2AccountFile, sep=',')
 	rawDataFrame['label'] = [2 for i in xrange(rawDataFrame.shape[0])]
 	rawDataFrame.to_csv(pv.rule2AccountFile, header=False, index=False)
+	'''
 	
 	rawDataFrame = pd.read_table(pv.rule3AccountFile, sep=',')
 	rawDataFrame['label'] = [2 for i in xrange(rawDataFrame.shape[0])]
@@ -53,6 +55,8 @@ def preprocess():
 	rawDataFrame['label'] = [0 for i in xrange(rawDataFrame.shape[0])]
 	rawDataFrame.to_csv(pv.randomAccountFile, header=False, index=False)
 
+	Utils.logMessage("\nMark account finished")
+
 	merge(pv.mergedAccountFile, [pv.confirmedAccountFile, pv.randomAccountFile, pv.rule1AccountFile, pv.rule2AccountFile, pv.rule3AccountFile, pv.rule4AccountFile, pv.rule5AccountFile, pv.rule6AccountFile])
 
 def merge(targetFile, files):
@@ -70,6 +74,7 @@ def merge(targetFile, files):
 
 	fWriter.close()
 
+	Utils.logMessage("\nMerge account finished")
 
 def run():
 	global sparkContext, writer
@@ -77,9 +82,9 @@ def run():
 	rawData = sparkContext.textFile(pv.mergedAccountFile).map(countByFeatures).map(lambda item: LabeledPoint(item[0], Vectors.dense(item[2:])))
 
 	for ratio in [0.7]:
-		for impurity in ['entropy','gini']:
-			for maxDepth in [4,5,6]:
-				for maxBin in [16, 32]:
+		for impurity in ['entropy']:
+			for maxDepth in [4]:
+				for maxBin in [16]:
 					runWithParam(rawData, ratio, impurity, maxDepth, maxBin)
 
 
@@ -89,11 +94,11 @@ def runWithParam(rawData, ratio, impurity, maxDepth, maxBin):
 	decisionTreeModel, trainingError, testError = DecisionTreeProcess(trainingSet, testSet, impurity, maxDepth, maxBin)
 	print '\nDecision Tree Training Err: %s, Test Err: %s' %(str(trainingError), str(testError))
 
+	'''
 	writer.write('\nCurrent run ratio %s, maxDepth %s, maxBin %s, impurity %s' %(str(ratio), str(maxDepth), str(maxBin), impurity))
 	writer.write('\n\tDecision Tree TrainingError %s, TestError %s' %(str(trainingError), str(testError)))
 	recordOptimal(trainingError, testError, decisionTreeModel)
 
-	'''
 	randomForestModel, trainingError, testError = RandomForestProcess(trainingSet, testSet, impurity, maxDepth, maxBin)
 	print '\nRandom Forest Training Err: %s, Test Err: %s' %(str(trainingError), str(testError))
 
@@ -124,7 +129,7 @@ def countByFeatures(item):
 	addrNum = len(items[3].split('|'))
 	promotionNum = len(items[4].split('|'))
 
-	return (items[-1], items[0], ipNum, devIDNum, addrNum, promotionNum)
+	return (items[-1], items[0], ipNum ** 2, devIDNum ** 3, addrNum ** 2, promotionNum)
 
 
 def recordOptimal(trainingError,testError, model):
@@ -219,4 +224,4 @@ if __name__ == '__main__':
 
 	writer.write('\n\nFinal optimal param\nminTrainingError %s, minTestError %s' %(str(minTrainingError), str(minTestError)))
 	writer.close()
-	optimalModel.save(sparkContext,'/home/yifei/TestData/data/realdata/classification_50000.model')
+	optimalModel.save(sparkContext,'/home/yifei/TestData/data/realdata/classification.model')

@@ -5,24 +5,26 @@ from pyspark.mllib.tree import DecisionTree, DecisionTreeModel
 import Utils
 import Evaluation as eva
 
-def process(sc, clusterNum, eigenVecFile, markedClusterFile):
+def process(sc, dtClusterNum, dtMaxDepth, dtMaxBins, eigenVecFile, markedClusterFile):
 	filteredEigenVec = sc.textFile(eigenVecFile).map(lambda item: removeVirtualPart(item)).collect()
 	clusterIDs = sc.textFile(markedClusterFile).map(lambda item: extractClusterID(item)).collect()
 	clusterIdEigenVecMapRDD = sc.parallelize(clusterIDs).zip(sc.parallelize(filteredEigenVec))
 	labeledClusterIdEigenVecMapRdd = clusterIdEigenVecMapRDD.map(lambda item: LabeledPoint(item[0], item[1]))
 
-	trainingSet, testSet = labeledClusterIdEigenVecMapRdd.randomSplit([7,3])
+	trainingSet, testSet = labeledClusterIdEigenVecMapRdd.randomSplit([0.7, 0.3])
 
-	decisionTreeModel = DecisionTree.trainClassifier(trainingSet, numClasses = clusterNum,
-														categoricalFeaturesInfo={},impurity='gini',maxDepth=4, maxBins=16)
+	decisionTreeModel = DecisionTree.trainClassifier(trainingSet, numClasses = dtClusterNum,
+														categoricalFeaturesInfo={},impurity='gini',maxDepth=dtMaxDepth, maxBins=dtMaxBins)
 
 	predictions = decisionTreeModel.predict(trainingSet.map(lambda item: item.features))
 	trainingLabelsAndPredictions = trainingSet.map(lambda item: item.label).zip(predictions)
-	eva.calculateErrorRate(trainingLabelsAndPredictions)
+	trainingError = eva.calculateErrorRate(trainingLabelsAndPredictions)
 
 	predictions = decisionTreeModel.predict(testSet.map(lambda item: item.features))
 	testLabelsAndPredictions = testSet.map(lambda item: item.label).zip(predictions)
-	eva.calculateErrorRate(testLabelsAndPredictions)
+	testError = eva.calculateErrorRate(testLabelsAndPredictions)
+
+	return decisionTreeModel, trainingError, testError
 
 
 def removeVirtualPart(item):
