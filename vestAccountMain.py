@@ -1,35 +1,65 @@
+#-*-coding:utf-8-*-
+import pandas as pd
 import ClassificationMain as classification
 import ClusterMain as cluster
 import PredefinedValues as pv
+import FileParser as fp
+import Utils
 
 
 def loadModel():
 	clusterModel = KMeansModel.load(sc, pv.clusterModelPath)
 	classificationModel = DecisionTreeModel.load(sc, pv.classificationModelPath)
+	Utils.logMessage("\nLoad cluster & classification model finished")
 
 
-def demo():
-	simMatrix = loadSimMatrix()
-	sampleSize = 10
-	sampleRDD = sc.take(sampleSize)
-	index = [x for x in xrange(sampleSize)]
-	indexedSampleRDD = sampleRDD.zip(index).map(lambda item: (item[1], item[0]))
-	predictedSampleRDD = indexedSampleRDD.map(lambda item: (item[1].Label, classificationModel.predict(item[1].features)))
-	suspeciousAccountsRDD = predictedSampleRDD.filter(filterSuspecious)
-	clusteredSample = suspeciousAccountsRDD.map(lambda item: getSimVector(item[0], simMatrix)).map(lambda item: clusterModel.centers[clusterModel.predict(item)]).collect()
-	accountMap = accountsByCluster(clusteredSample)
+def demo(count):
+
+	for idx in xrange(count):
+		loadModel()
+
+		#take random account from merged file
+		df = fp.readData(pv.mergedAccountFile)
+		record = df[idx,:]
+
+		#organize feature count
+		compressedRecord = classification.countByFeatures(record)
+		labeledRecord = LabelPoint(compressedRecord[0], compressedRecord[1:])
+
+		#predict cluster
+		predictedLabel = classificationModel.predict(labeledRecord.features)
+
+		if predictedLabel <= 1:
+			print "\nPredicted label: %s, safe account, go for next" %str(predictedLabel)
+			continue
+
+		else:
+			print "\nPredicted label: %s, risky account, double check using cluster model" %str(predictedLabel)
+
+			#calculate similarity with existing simMatrix
+			sim = calculateSim(record, loadSimMatrix())
+
+			#find accounts within same cluster 
+			predictedCluster = clusterModel.centers[clusterModel.predict(sim)]
+
+			similarAccounts = getClusterAccounts(predictedCluster, clusterAccountMap)
+
+			newLabel = checkSimilarAccounts(similarAccounts)
+
+			if newLabel >= predictedLabel:
+				print "\nSuspecious account, mark as training data for next round"
+
+				#retrain classification model
+
+
+				#retrain cluster model
+
+			else:
+				print "\nLow risk account, go for next"
 
 
 def loadSimMatrix():
 	return pd.read_csv(pv.simMatrixFilePath)
-
-
-def filterSuspecious(item):
-	return item[1] >= 2 or (item[0] >= 2 and item[1] < 2)
-
-
-def getSimVector(idx, simMatrix):
-	return simMatrix[idx, :]
 
 
 def run():
@@ -42,11 +72,8 @@ def run():
 	#train classification model
 	classification.run()
 
-	#load classification & cluster model to predict 
-	loadModel()
-
 	#random pick 10 records and make prediction
-	demo()
+	demo(10)
 
 if __name__ == '__main__':
 	run()
