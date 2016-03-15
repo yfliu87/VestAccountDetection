@@ -6,6 +6,7 @@ import PredefinedValues as pv
 import FileParser as fp
 import Utils
 
+clusterAccountMap = {}
 
 def demo(count):
 	for idx in xrange(pv.truncateLineCount, pv.truncateLineCount + count):
@@ -53,13 +54,28 @@ def demo(count):
 
 def loadModel():
 	clusterModel = KMeansModel.load(sc, pv.clusterModelPath)
+	buildClusterAccountMap(pv.clusterIDCenterFile)
 	classificationModel = DecisionTreeModel.load(sc, pv.classificationModelPath)
 	Utils.logMessage("\nLoad cluster & classification model finished")
+
+def buildClusterAccountMap(clusterAccountFilePath):
+	df = fp.readData(clusterAccountFilePath)
+	for idx in xrange(df.shape[0]):
+		pin = df['buyer_pin']
+		cluster = df['center']
+
+		if cluster not in clusterAccountMap:
+			clusterAccountMap[cluster] = []
+
+		clusterAccountMap[cluster].append(pin)
 
 
 def calculateSim(df, matSize):
 	return cm.getSimilarityMatrixMultiProcess(df[:matSize])
 
+
+def getClusterAccounts(cluster, clusterAccountMap):
+	return clusterAccountMap[cluster]
 
 def run():
 	#preprocess rule output file, mark, combine
