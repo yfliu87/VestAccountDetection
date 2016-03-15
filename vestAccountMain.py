@@ -7,15 +7,8 @@ import FileParser as fp
 import Utils
 
 
-def loadModel():
-	clusterModel = KMeansModel.load(sc, pv.clusterModelPath)
-	classificationModel = DecisionTreeModel.load(sc, pv.classificationModelPath)
-	Utils.logMessage("\nLoad cluster & classification model finished")
-
-
 def demo(count):
-
-	for idx in xrange(count):
+	for idx in xrange(pv.truncateLineCount, pv.truncateLineCount + count):
 		loadModel()
 
 		#take random account from merged file
@@ -37,7 +30,7 @@ def demo(count):
 			print "\nPredicted label: %s, risky account, double check using cluster model" %str(predictedLabel)
 
 			#calculate similarity with existing simMatrix
-			sim = calculateSim(record, loadSimMatrix())
+			sim = calculateSim(pv.truncateLineCount + idx)
 
 			#find accounts within same cluster 
 			predictedCluster = clusterModel.centers[clusterModel.predict(sim)]
@@ -58,8 +51,14 @@ def demo(count):
 				print "\nLow risk account, go for next"
 
 
-def loadSimMatrix():
-	return pd.read_csv(pv.simMatrixFilePath)
+def loadModel():
+	clusterModel = KMeansModel.load(sc, pv.clusterModelPath)
+	classificationModel = DecisionTreeModel.load(sc, pv.classificationModelPath)
+	Utils.logMessage("\nLoad cluster & classification model finished")
+
+
+def calculateSim(df, matSize):
+	return cm.getSimilarityMatrixMultiProcess(df[:matSize])
 
 
 def run():
