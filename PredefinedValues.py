@@ -22,11 +22,11 @@ eigenVecFile = '/home/yifei/TestData/data/realdata/testdata_eigenVec_20160307.cs
 clusterIDCenterFile = '/home/yifei/TestData/data/realdata/testdata_clustered_id_center_20160307.csv'
 clusterIDFile = '/home/yifei/TestData/data/realdata/testdata_clustered_id_20160307.csv'
 IDFOREACHCLUSTER = 20
-truncateLineCount = 3001
+truncateLineCount = 1001
 clusterNum = truncateLineCount/IDFOREACHCLUSTER
-dimensionReductionNum = 15
-treeMaxDepth = 3
-treeMaxBins = 8
+dimensionReductionNum = 10
+treeMaxDepth = 4
+treeMaxBins = 16
 
 #below parameters only for classification model
 confirmedAccountFile = '/home/yifei/TestData/data/realdata/ruleFilteredAccount.txt'
@@ -38,3 +38,8 @@ rule4AccountFile = '/home/yifei/TestData/data/realdata/output_rule4.txt'
 rule5AccountFile = '/home/yifei/TestData/data/realdata/output_rule5.txt' 
 rule6AccountFile = '/home/yifei/TestData/data/realdata/output_rule6.txt' 
 mergedAccountFile = '/home/yifei/TestData/data/realdata/mergedAccount.txt' 
+
+#below params are defined for mixed model demo
+classificationModelPath = '/home/yifei/TestData/data/realdata/classification.model'
+clusterModelPath = '/home/yifei/TestData/data/realdata/cluster.model'
+

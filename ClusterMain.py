@@ -22,7 +22,7 @@ optimalDepth = None
 optimalBin = None
 
 
-def run():
+def run(sparkContext):
 	#truncate raw data to managable amount
 	fp.truncate(pv.mergedAccountFile, pv.truncatedFile, pv.truncateLineCount)
 
@@ -32,7 +32,7 @@ def run():
 
 	simMat = cm.getSimilarityMatrixMultiProcess(rawDataFrame)
 
-	sparkContext = SparkContext()
+	#sparkContext = SparkContext()
 
 	model, unifiedRDDVecs = cluster.getClusterModel(sparkContext, simMat, rawDataFrame, pv.clusterNum, pv.dimensionReductionNum, pv.eigenVecFile)
 
@@ -40,9 +40,12 @@ def run():
 
 	fp.outputNodesInSameCluster(model, unifiedRDDVecs, rawDataFrame, pv.clusterIDCenterFile, pv.clusterIDFile)
 
-	#classification.process(sparkContext, pv.clusterNum, pv.treeMaxDepth, pv.treeMaxBins, pv.eigenVecFile, pv.clusterIDFile)
+	decisionTreeModel, trainingError, testError = classification.process(sparkContext, pv.clusterNum, pv.treeMaxDepth, pv.treeMaxBins, pv.eigenVecFile, pv.clusterIDFile)
+
+	model.save(sparkContext, pv.clusterModelPath)
 
 	Utils.logMessage("\nTrain cluster model finished")
+	Utils.logMessage("\nCluster precision: \nTraining error %s , Test error %s" %str(trainingError, testError))
 
 def run(recordCount, clusterNum, dimension, maxDepth, maxBin):
 	global sparkContext, writer, optimalClusterModel, optimalClassificationModel, minTrainingError, minTestError, minSSE,optimalRecord, optimalClusterNum, optimalDimension, optimalDepth, optimalBin

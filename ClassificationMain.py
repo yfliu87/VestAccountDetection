@@ -13,7 +13,7 @@ import Evaluation as eva
 import PredefinedValues as pv
 import Utils
 
-sparkContext = SparkContext()
+#sparkContext = SparkContext()
 writer = open('/home/yifei/TestData/data/realdata/classification_50000.csv','w')
 optimalModel = None
 minTrainingError = 1.0
@@ -76,8 +76,8 @@ def merge(targetFile, files):
 
 	Utils.logMessage("\nMerge account finished")
 
-def run():
-	global sparkContext, writer
+def run(sparkContext):
+	#global sparkContext, writer
 
 	rawData = sparkContext.textFile(pv.mergedAccountFile).map(countByFeatures).map(lambda item: LabeledPoint(item[0], Vectors.dense(item[2:])))
 
@@ -85,14 +85,16 @@ def run():
 		for impurity in ['entropy']:
 			for maxDepth in [4]:
 				for maxBin in [16]:
-					runWithParam(rawData, ratio, impurity, maxDepth, maxBin)
+					runWithParam(rawData, accountNum, ratio, impurity, maxDepth, maxBin)
 
 
-def runWithParam(rawData, ratio, impurity, maxDepth, maxBin):
-	trainingSet, testSet = rawData.randomSplit([ratio, 1-ratio])
+def runWithParam(rawData, accountNum, ratio, impurity, maxDepth, maxBin):
+
+	trainingSet, testSet = rawData[:accountNum,:].randomSplit([ratio, 1-ratio])
 
 	decisionTreeModel, trainingError, testError = DecisionTreeProcess(trainingSet, testSet, impurity, maxDepth, maxBin)
 	print '\nDecision Tree Training Err: %s, Test Err: %s' %(str(trainingError), str(testError))
+	decisionTreeModel.save(sc, pv.classificationModelPath)
 
 	'''
 	writer.write('\nCurrent run ratio %s, maxDepth %s, maxBin %s, impurity %s' %(str(ratio), str(maxDepth), str(maxBin), impurity))

@@ -1,7 +1,9 @@
 #-*-coding:utf-8-*-
 import pandas as pd
+from pyspark import SparkContext
 import ClassificationMain as classification
 import ClusterMain as cluster
+import ComputeModule as compute
 import PredefinedValues as pv
 import FileParser as fp
 import Utils
@@ -9,6 +11,9 @@ import Utils
 clusterAccountMap = {}
 
 def demo(count):
+	Utils.logMessage("\ndemo for %s rounds" %str(count))
+	Utils.logMessage("\nInitial accounts %s " %str(pv.truncateLineCount))
+
 	for idx in xrange(pv.truncateLineCount, pv.truncateLineCount + count):
 		loadModel()
 
@@ -31,23 +36,24 @@ def demo(count):
 			print "\nPredicted label: %s, risky account, double check using cluster model" %str(predictedLabel)
 
 			#calculate similarity with existing simMatrix
-			sim = calculateSim(pv.truncateLineCount + idx)
+			sim = calculateSim(df, pv.truncateLineCount + idx)
 
 			#find accounts within same cluster 
 			predictedCluster = clusterModel.centers[clusterModel.predict(sim)]
 
 			clusteredAccounts = getClusterAccounts(predictedCluster, clusterAccountMap)
 
-			newLabel = checkSimilarAccounts(record, clusteredAccounts)
+			newLabel = checkSimilarAccounts(df, record, clusteredAccounts)
 
 			if newLabel >= predictedLabel:
 				print "\nSuspecious account, mark as training data for next round"
 
 				#retrain classification model
-
+				classificiation.run()
 
 				#retrain cluster model
-
+				pv.truncateLineCount += idx
+				cluster.run()
 			else:
 				print "\nLow risk account, go for next"
 
@@ -71,19 +77,20 @@ def buildClusterAccountMap(clusterAccountFilePath):
 
 
 def calculateSim(df, matSize):
-	return cm.getSimilarityMatrixMultiProcess(df[:matSize])
+	simMatrix = cm.getSimilarityMatrixMultiProcess(df[:matSize])
+	return simMatrix[-1:,:]
 
 
 def getClusterAccounts(cluster, clusterAccountMap):
 	return clusterAccountMap[cluster]
 
 
-def checkSimilarAccounts(curAccount, clusteredAccounts):
+def checkSimilarAccounts(df, curAccount, clusteredAccounts):
 	maxSim = 0.0
 	candidateIdx = -1
 	for item in clusteredAccounts:
 		account = df.loc(item)
-		sim = calculateSimilarity(curAccount, account)
+		sim = compute.computeSimilarity(curAccount, account)
 		if sim > maxSim:
 			maxSim = sim
 			candidateIdx = item
@@ -91,18 +98,21 @@ def checkSimilarAccounts(curAccount, clusteredAccounts):
 	similarLabel = getLabelByIdx(candidateIdx)
 	return similarLabel
 
-def run():
+
+
+def run(sc):
 	#preprocess rule output file, mark, combine
 	classification.preprocess()
 
 	#train cluster model
-	cluster.run()
+	cluster.run(sc)
 
 	#train classification model
-	classification.run()
+	classification.run(sc)
 
 	#random pick 10 records and make prediction
 	demo(10)
 
 if __name__ == '__main__':
+	sc = SparkContext()
 	run()
