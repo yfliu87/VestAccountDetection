@@ -95,9 +95,11 @@ def checkSimilarAccounts(df, curAccount, clusteredAccounts):
 			maxSim = sim
 			candidateIdx = item
 
-	similarLabel = getLabelByIdx(candidateIdx)
-	return similarLabel
+	return getLabelByIdx(df, candidateIdx)
 
+
+def getLabelByIdx(df,idx):
+	return df.loc(idx).split(',')[-1]
 
 
 def run(sc):
