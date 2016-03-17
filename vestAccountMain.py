@@ -16,8 +16,6 @@ sc = SparkContext()
 clusterAccountMap = {}
 
 def demo(count):
-	Utils.logMessage("\nJob started %s rounds" %str(count))
-	Utils.logMessage("\nInitial accounts %s " %str(pv.truncateLineCount - 1))
 
 	for idx in xrange(pv.truncateLineCount, pv.truncateLineCount + count):
 		clusterModel, classificationModel = loadModel()
@@ -36,14 +34,11 @@ def demo(count):
 		if predictedLabel <= 1:
 			print "\nPredicted label: %s, safe account, go for next" %str(predictedLabel)
 			continue
-
 		else:
 			print "\nPredicted label: %s, risky account, double check using cluster model" %str(predictedLabel)
 
 			#calculate similarity with existing simMatrix
 			sim = calculateSim(df, idx)
-			Utils.logMessage("\ncalculateSim done")
-
 			mostSimilarAccountIdx = sim.index(max(sim))
 			newLabel = getLabelByIdx(df, mostSimilarAccountIdx)
 
@@ -51,11 +46,11 @@ def demo(count):
 
 			if newLabel >= predictedLabel:
 				print "\nSuspecious account, mark as training data for next round"
-				pv.truncateLineCount += idx
-
+				pv.truncateLineCount = idx
 				df.loc[idx] = refreshRecord(record, predictedLabel)
-
 				df.to_csv(pv.mergedAccountFile, index=False, encoding='utf-8')
+
+				removeModelFolder()
 
 				#retrain classification model
 				classification.run(sc)
@@ -126,6 +121,13 @@ def refreshRecord(record, newLabel):
 	return np.array(retList)
 
 
+def removeModelFolder():
+	import os
+	import shutil
+	shutil.rmtree(pv.classificationModelPath)
+	shutil.rmtree(pv.clusterModelPath)
+
+
 def run():
 	#preprocess rule output file, mark, combine
 	classification.preprocess()
@@ -139,7 +141,7 @@ def run():
 	classification.run(sc)
 
 	Utils.logMessage("\nPretraining model finished")
-
+	Utils.logMessage("\nInitial accounts %s " %str(pv.truncateLineCount - 1))
 	#random pick 10 records and make prediction
 	demo(10)
 
