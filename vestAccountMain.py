@@ -1,6 +1,9 @@
 #-*-coding:utf-8-*-
 import pandas as pd
 from pyspark import SparkContext
+from pyspark.mllib.clustering import KMeans, KMeansModel
+from pyspark.mllib.tree import DecisionTree, DecisionTreeModel
+from pyspark.mllib.regression import LabeledPoint
 import ClassificationMain as classification
 import ClusterMain as cluster
 import ComputeModule as compute
@@ -8,22 +11,23 @@ import PredefinedValues as pv
 import FileParser as fp
 import Utils
 
+sc = SparkContext()
 clusterAccountMap = {}
 
 def demo(count):
-	Utils.logMessage("\ndemo for %s rounds" %str(count))
-	Utils.logMessage("\nInitial accounts %s " %str(pv.truncateLineCount))
+	Utils.logMessage("\nJob started %s rounds" %str(count))
+	Utils.logMessage("\nInitial accounts %s " %str(pv.truncateLineCount - 1))
 
 	for idx in xrange(pv.truncateLineCount, pv.truncateLineCount + count):
-		loadModel()
+		clusterModel, classificationModel = loadModel()
 
 		#take random account from merged file
 		df = fp.readData(pv.mergedAccountFile)
-		record = df[idx,:]
+		record = df.loc[idx]
 
 		#organize feature count
-		compressedRecord = classification.countByFeatures(record)
-		labeledRecord = LabelPoint(compressedRecord[0], compressedRecord[1:])
+		compressedRecord = countByFeatures(record)
+		labeledRecord = LabeledPoint(compressedRecord[0], compressedRecord[2:])
 
 		#predict cluster
 		predictedLabel = classificationModel.predict(labeledRecord.features)
@@ -36,26 +40,29 @@ def demo(count):
 			print "\nPredicted label: %s, risky account, double check using cluster model" %str(predictedLabel)
 
 			#calculate similarity with existing simMatrix
-			sim = calculateSim(df, pv.truncateLineCount + idx)
+			sim = calculateSim(df, idx)
+			Utils.logMessage("\n@calculateSim done")
 
-			#find accounts within same cluster 
-			predictedCluster = clusterModel.centers[clusterModel.predict(sim)]
+			mostSimilarAccountIdx = sim.index(max(sim))
+			newLabel = getLabelByIdx(df, mostSimilarAccountIdx)
 
-			clusteredAccounts = getClusterAccounts(predictedCluster, clusterAccountMap)
-
-			newLabel = checkSimilarAccounts(df, record, clusteredAccounts)
+			Utils.logMessage("\n@check similar accounts done, label from most similar account is %s" %str(newLabel))
 
 			if newLabel >= predictedLabel:
 				print "\nSuspecious account, mark as training data for next round"
+				pv.truncateLineCount += idx
+				record['label'] = predictedLabel
+				df.to_csv(pv.mergedAccountFile, index=False, encoding='utf-8')
 
 				#retrain classification model
-				classificiation.run()
+				classificiation.run(sc)
 
 				#retrain cluster model
-				pv.truncateLineCount += idx
-				cluster.run()
+				cluster.run(sc)
 			else:
 				print "\nLow risk account, go for next"
+
+	Utils.logMessage("Job Finished!")
 
 
 def loadModel():
@@ -63,26 +70,31 @@ def loadModel():
 	buildClusterAccountMap(pv.clusterIDCenterFile)
 	classificationModel = DecisionTreeModel.load(sc, pv.classificationModelPath)
 	Utils.logMessage("\nLoad cluster & classification model finished")
+	return clusterModel, classificationModel
 
 def buildClusterAccountMap(clusterAccountFilePath):
 	df = fp.readData(clusterAccountFilePath)
 	for idx in xrange(df.shape[0]):
-		pin = df['buyer_pin']
-		cluster = df['center']
+		pin = df.loc[idx]['buyer_pin']
+		cluster = df.loc[idx]['center']
 
 		if cluster not in clusterAccountMap:
 			clusterAccountMap[cluster] = []
 
 		clusterAccountMap[cluster].append(idx)
 
+def countByFeatures(record):
+	ipNum = len(record['buyer_ip'].split('|'))
+	devIDNum = len(record['equipment_id'].split('|'))
+	addrNum = len(record['buyer_poi'].split('|'))
+	promotionNum = len(record['promotion_id'].split('|'))
+ 
+	return (record['label'], record['buyer_pin'], ipNum ** 2, devIDNum ** 3, addrNum ** 2, promotionNum)
+
 
 def calculateSim(df, matSize):
-	simMatrix = cm.getSimilarityMatrixMultiProcess(df[:matSize])
-	return simMatrix[-1:,:]
-
-
-def getClusterAccounts(cluster, clusterAccountMap):
-	return clusterAccountMap[cluster]
+	simMatrix = compute.getSimilarityMatrixMultiProcess(df[:matSize])
+	return simMatrix[-1].tolist()
 
 
 def checkSimilarAccounts(df, curAccount, clusteredAccounts):
@@ -99,10 +111,12 @@ def checkSimilarAccounts(df, curAccount, clusteredAccounts):
 
 
 def getLabelByIdx(df,idx):
-	return df.loc(idx).split(',')[-1]
+	return df.loc[idx]['label']
 
 
-def run(sc):
+def run():
+	Utils.logMessage("\nPretraining model started")
+
 	#preprocess rule output file, mark, combine
 	classification.preprocess()
 
@@ -112,9 +126,10 @@ def run(sc):
 	#train classification model
 	classification.run(sc)
 
+	Utils.logMessage("\nPretraining model finished")
+
 	#random pick 10 records and make prediction
 	demo(10)
 
 if __name__ == '__main__':
-	sc = SparkContext()
 	run()

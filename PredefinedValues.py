@@ -1,6 +1,6 @@
 #-*-coding:utf-8-*-
-targetFields = ['order_id','buyer_pin','buyer_full_name','buyer_full_address','buyer_mobile','buyer_ip','equipment_id','buyer_city_name','buyer_country_name','buyer_poi','promotion_id']
-
+targetFields = ['order_id','buyer_pin','buyer_full_name','buyer_full_address','buyer_mobile','buyer_ip','equipment_id','buyer_city_name','buyer_country_name','buyer_poi','promotion_id','label']
+fileColumns = ['buyer_pin','equipment_id','buyer_ip','buyer_poi','promotion_id']
 simWeight = {'buyer_ip':20, 
 			 'buyer_mobile':0, 
 			 'buyer_full_address':0, 
@@ -14,15 +14,15 @@ simWeight = {'buyer_ip':20,
 DEFAULTSIM = 0.0
 
 sourceFile ='/home/yifei/TestData/data/realdata/testdata_20160307.csv' 
-truncatedFile = '/home/yifei/TestData/data/realdata/testdata_truncated_20160307.csv'
-processedFile = '/home/yifei/TestData/data/realdata/testdata_processed_20160307.csv'
+truncatedFile = '/home/yifei/TestData/data/realdata/truncated.csv'
+processedFile = '/home/yifei/TestData/data/realdata/processed.csv'
 trainingFile = processedFile
 testFile = ''
-eigenVecFile = '/home/yifei/TestData/data/realdata/testdata_eigenVec_20160307.csv'
-clusterIDCenterFile = '/home/yifei/TestData/data/realdata/testdata_clustered_id_center_20160307.csv'
-clusterIDFile = '/home/yifei/TestData/data/realdata/testdata_clustered_id_20160307.csv'
+eigenVecFile = '/home/yifei/TestData/data/realdata/eigenVec.csv'
+clusterIDCenterFile = '/home/yifei/TestData/data/realdata/clustered_id_center.csv'
+clusterIDFile = '/home/yifei/TestData/data/realdata/clustered_id.csv'
 IDFOREACHCLUSTER = 20
-truncateLineCount = 1001
+truncateLineCount = 501
 clusterNum = truncateLineCount/IDFOREACHCLUSTER
 dimensionReductionNum = 10
 treeMaxDepth = 4

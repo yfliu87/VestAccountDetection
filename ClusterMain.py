@@ -13,8 +13,8 @@ optimalClassificationModel = None
 minTrainingError = 1.0
 minTestError = 1.0
 minSSE = 1.0
-writer = open('/home/yifei/TestData/data/realdata/performanceParam.csv', 'w')
-sparkContext = SparkContext()
+#writer = open('/home/yifei/TestData/data/realdata/performanceParam.csv', 'w')
+#sparkContext = SparkContext()
 optimalRecord = None
 optimalClusterNum = None
 optimalDimension = None
@@ -45,10 +45,11 @@ def run(sparkContext):
 	model.save(sparkContext, pv.clusterModelPath)
 
 	Utils.logMessage("\nTrain cluster model finished")
-	Utils.logMessage("\nCluster precision: \nTraining error %s , Test error %s" %str(trainingError, testError))
+	Utils.logMessage("\nCluster precision: \nTraining error %s , Test error %s" %(str(trainingError), str(testError)))
 
+'''
 def run(recordCount, clusterNum, dimension, maxDepth, maxBin):
-	global sparkContext, writer, optimalClusterModel, optimalClassificationModel, minTrainingError, minTestError, minSSE,optimalRecord, optimalClusterNum, optimalDimension, optimalDepth, optimalBin
+	global writer, optimalClusterModel, optimalClassificationModel, minTrainingError, minTestError, minSSE,optimalRecord, optimalClusterNum, optimalDimension, optimalDepth, optimalBin
 	
 	#fp.truncate(pv.sourceFile, pv.truncatedFile, recordCount)
 	fp.truncate(pv.mergedAccountFile, pv.truncatedFile, recordCount)
@@ -85,7 +86,7 @@ def run(recordCount, clusterNum, dimension, maxDepth, maxBin):
 		optimalBin = maxBin
 
 if __name__ == '__main__':
-	global sparkContext, writer, optimalClusterModel, optimalClassificationModel, minTrainingError, minTestError, minSSE,optimalRecord, optimalClusterNum, optimalDimension, optimalDepth, optimalBin
+	global writer, optimalClusterModel, optimalClassificationModel, minTrainingError, minTestError, minSSE,optimalRecord, optimalClusterNum, optimalDimension, optimalDepth, optimalBin
 
 	for recordCount in [10001]:
 		for clusterNum in [300]:
@@ -101,4 +102,4 @@ if __name__ == '__main__':
 	optimalClusterModel.save(sparkContext, '/home/yifei/TestData/data/realdata/cluster.model')
 	#optimalClassificationModel.save(sparkContext,'/home/yifei/TestData/data/realdata/classificationModel.mod')
 	#run()
-	
+'''
