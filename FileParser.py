@@ -6,8 +6,8 @@ import Utils
 
 
 def truncate(sourceFile, targetFile, truncateLineCount):
-	reader = codecs.open(sourceFile, 'r', 'gbk')
-	writer = codecs.open(targetFile, 'w', 'gbk')
+	reader = codecs.open(sourceFile, 'r','utf-8')
+	writer = codecs.open(targetFile, 'w','utf-8')
 
 	count = 0
 	while count < truncateLineCount:
@@ -21,8 +21,8 @@ def truncate(sourceFile, targetFile, truncateLineCount):
 
 
 def preprocess(sourceFile, targetFile, targetFields):
-	reader = codecs.open(sourceFile, 'r','gbk')
-	writer = codecs.open(targetFile, 'w','gbk')
+	reader = codecs.open(sourceFile, 'r','utf-8')
+	writer = codecs.open(targetFile, 'w','utf-8')
 
 	line = reader.readline()
 	fields = line.replace('\n','').split(',')
@@ -53,7 +53,7 @@ def filterFields(line, fieldsIdx):
 
 
 def readData(filepath):
-	return pd.read_csv(filepath, encoding='gbk')
+	return pd.read_csv(filepath, encoding='utf-8')
 
 
 def outputMatrix(matrix, targetFile):
@@ -63,10 +63,10 @@ def outputMatrix(matrix, targetFile):
 def outputNodesInSameCluster(model, unifiedRDDVecs, rawDataFrame, clusterIDCenterFilePath, clusterIDFilePath):
 	centers = unifiedRDDVecs.map(lambda item: model.clusterCenters[model.predict(item)]).collect()
 	rawDataFrame['clusterID'] = convertClusterID(centers)
-	pd.DataFrame(rawDataFrame).to_csv(clusterIDFilePath, header=False, index=False, encoding='gbk')
+	pd.DataFrame(rawDataFrame).to_csv(clusterIDFilePath, header=False, index=False, encoding='utf-8')
 
 	rawDataFrame['center'] = centers
-	groupUserByCluster(rawDataFrame).to_csv(clusterIDCenterFilePath, index=False, encoding='gbk')
+	groupUserByCluster(rawDataFrame).to_csv(clusterIDCenterFilePath, index=False, encoding='utf-8')
 	Utils.logMessage("\nOutput cluster finished")
 
 
