@@ -1,5 +1,6 @@
 #-*-coding:utf-8-*-
 import pandas as pd
+import numpy as np
 from pyspark import SparkContext
 from pyspark.mllib.clustering import KMeans, KMeansModel
 from pyspark.mllib.tree import DecisionTree, DecisionTreeModel
@@ -41,21 +42,23 @@ def demo(count):
 
 			#calculate similarity with existing simMatrix
 			sim = calculateSim(df, idx)
-			Utils.logMessage("\n@calculateSim done")
+			Utils.logMessage("\ncalculateSim done")
 
 			mostSimilarAccountIdx = sim.index(max(sim))
 			newLabel = getLabelByIdx(df, mostSimilarAccountIdx)
 
-			Utils.logMessage("\n@check similar accounts done, label from most similar account is %s" %str(newLabel))
+			Utils.logMessage("\nLabel of most similar account is %s" %str(newLabel))
 
 			if newLabel >= predictedLabel:
 				print "\nSuspecious account, mark as training data for next round"
 				pv.truncateLineCount += idx
-				record['label'] = predictedLabel
+
+				df.loc[idx] = refreshRecord(record, predictedLabel)
+
 				df.to_csv(pv.mergedAccountFile, index=False, encoding='utf-8')
 
 				#retrain classification model
-				classificiation.run(sc)
+				classification.run(sc)
 
 				#retrain cluster model
 				cluster.run(sc)
@@ -93,8 +96,11 @@ def countByFeatures(record):
 
 
 def calculateSim(df, matSize):
-	simMatrix = compute.getSimilarityMatrixMultiProcess(df[:matSize])
-	return simMatrix[-1].tolist()
+	cur = df.loc[matSize]
+	ret = []
+	for i in xrange(matSize):
+		ret.append(compute.computeSimilarity(df.loc[i], cur))
+	return ret
 
 
 def checkSimilarAccounts(df, curAccount, clusteredAccounts):
@@ -113,12 +119,18 @@ def checkSimilarAccounts(df, curAccount, clusteredAccounts):
 def getLabelByIdx(df,idx):
 	return df.loc[idx]['label']
 
+def refreshRecord(record, newLabel):
+	retList = record.tolist()
+	labelIdx = retList.index(record['label'])
+	retList[labelIdx] = newLabel
+	return np.array(retList)
+
 
 def run():
-	Utils.logMessage("\nPretraining model started")
-
 	#preprocess rule output file, mark, combine
 	classification.preprocess()
+
+	Utils.logMessage("\nPretraining model started")
 
 	#train cluster model
 	cluster.run(sc)
