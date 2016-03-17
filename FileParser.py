@@ -3,6 +3,7 @@ import codecs
 import pandas as pd
 import numpy as np
 import Utils
+import PredefinedValues as pv
 
 
 def truncate(sourceFile, targetFile, truncateLineCount):
@@ -17,7 +18,8 @@ def truncate(sourceFile, targetFile, truncateLineCount):
 	reader.close()
 	writer.close()
 
-	Utils.logMessage("\nTruncate file finished")
+	if pv.outputDebugMsg:
+		Utils.logMessage("\nTruncate file finished")
 
 
 def preprocess(sourceFile, targetFile, targetFields):
@@ -39,7 +41,8 @@ def preprocess(sourceFile, targetFile, targetFields):
 	reader.close()
 	writer.close()
 
-	Utils.logMessage("\nFilter fields finished")
+	if pv.outputDebugMsg:
+		Utils.logMessage("\nFilter fields finished")
 
 
 def filterFields(line, fieldsIdx):
@@ -67,7 +70,9 @@ def outputNodesInSameCluster(model, unifiedRDDVecs, rawDataFrame, clusterIDCente
 
 	rawDataFrame['center'] = centers
 	groupUserByCluster(rawDataFrame).to_csv(clusterIDCenterFilePath, index=False, encoding='utf-8')
-	Utils.logMessage("\nOutput cluster finished")
+
+	if pv.outputDebugMsg:
+		Utils.logMessage("\nOutput cluster finished")
 
 
 def convertClusterID(centers):
@@ -83,7 +88,8 @@ def convertClusterID(centers):
 
 		ret.append(clusterIDMap[scenter])
 
-	Utils.logMessage('\nConvert to cluster ID finished')
+	if pv.outputDebugMsg:
+		Utils.logMessage('\nConvert to cluster ID finished')
 	return ret
 
 

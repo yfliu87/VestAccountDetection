@@ -16,6 +16,8 @@ sc = SparkContext()
 
 def demo(count):
 	for idx in xrange(pv.truncateLineCount, pv.truncateLineCount + count):
+		Utils.logMessage("\nUser %s" %str(idx))
+
 		clusterModel, classificationModel = loadModel()
 
 		#take random account from merged file
@@ -61,7 +63,9 @@ def demo(count):
 def loadModel():
 	clusterModel = KMeansModel.load(sc, pv.clusterModelPath)
 	classificationModel = DecisionTreeModel.load(sc, pv.classificationModelPath)
-	Utils.logMessage("\nLoad cluster & classification model finished")
+
+	if pv.outputDebugMsg:
+		Utils.logMessage("\nLoad cluster & classification model finished")
 	return clusterModel, classificationModel
 
 

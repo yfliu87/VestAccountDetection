@@ -43,3 +43,4 @@ mergedAccountFile = '/home/yifei/TestData/data/realdata/mergedAccount.txt'
 classificationModelPath = '/home/yifei/TestData/data/realdata/classification.model'
 clusterModelPath = '/home/yifei/TestData/data/realdata/cluster.model'
 
+outputDebugMsg = False

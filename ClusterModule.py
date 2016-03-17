@@ -6,6 +6,7 @@ from numpy import *
 from pyspark.mllib.clustering import KMeans, KMeansModel
 import Utils
 import FileParser as fp
+import PredefinedValues as pv
 
 
 def getClusterModel(sc, mat, rawdata, clusterNum, dimensionReductionNum, targetEigenVecFile):
@@ -21,7 +22,8 @@ def getClusterModel(sc, mat, rawdata, clusterNum, dimensionReductionNum, targetE
 
 	model = kMeans(unifiedRDDVecs,clusterNum)
 
-	Utils.logMessage("\nCluster finished") 
+	if pv.outputDebugMsg:
+		Utils.logMessage("\nCluster finished") 
 
 	return model, unifiedRDDVecs
 
@@ -32,14 +34,17 @@ def getLaplacianMatrix(mat):
 	n = len(D)
 	D = D.T
 	D = sparse.spdiags(D, 0, n, n)
-	Utils.logMessage("\nConvert to Laplacian Matrix finished")
+
+	if pv.outputDebugMsg:
+		Utils.logMessage("\nConvert to Laplacian Matrix finished")
 
 	return D * mat * D
 
 def computeEigenValsVectors(mat, dimensionReductionNum):
 	eigenVals, eigenVecs = arpack.eigs(mat, k = dimensionReductionNum, tol=0, which = "LM")
 
-	Utils.logMessage("\nCompute eigen values vectors finished")
+	if pv.outputDebugMsg:
+		Utils.logMessage("\nCompute eigen values vectors finished")
 
 	return eigenVals, eigenVecs
 
@@ -52,14 +57,16 @@ def unification(vecs):
 		for j in xrange(cols):
 			vecs[i,j] = vecs[i,j]/sq_sum[i]
 
-	Utils.logMessage("\nUnification finished")
+	if pv.outputDebugMsg:
+		Utils.logMessage("\nUnification finished")
 	return vecs
 
 
 def kMeans(vecs, clusterNum):
 	clusters = KMeans.train(vecs, clusterNum, maxIterations=10, runs=10, initializationMode="random")
 
-	Utils.logMessage("\nKmean cluster finished")
+	if pv.outputDebugMsg:
+		Utils.logMessage("\nKmean cluster finished")
 
 	return clusters
 

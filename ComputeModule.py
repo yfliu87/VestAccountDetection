@@ -1,14 +1,16 @@
 #-*-coding:utf-8-*-
 import numpy as np
 import Utils
-import PredefinedValues as preVal
+import PredefinedValues as pv 
 
 
 def getSimilarityMatrixMultiProcess(rawDataFrame):
 	from multiprocessing import Pool
 	rows = rawDataFrame.shape[0]
-	Utils.logMessage("\nBuild similarity matrix of size %d x %d started" %(rows, rows))
-	Utils.logTime()
+
+	if pv.outputDebugMsg:
+		Utils.logMessage("\nBuild similarity matrix of size %d x %d started" %(rows, rows))
+		Utils.logTime()
 
 	indexes = [i for i in xrange(rows)]
 	simMat = []
@@ -19,8 +21,10 @@ def getSimilarityMatrixMultiProcess(rawDataFrame):
 	pool.close()
 	pool.join()
 
-	Utils.logMessage("\nBuild similarity matrix finished")
-	Utils.logTime()
+	if pv.outputDebugMsg:
+		Utils.logMessage("\nBuild similarity matrix finished")
+		Utils.logTime()
+
 	mat = np.matrix(simMat)
 
 	return np.add(mat, mat.T)
@@ -45,7 +49,7 @@ def computeSim(rowIdx, rawDataFrame):
 
 
 def computeSimilarity(user1, user2):
-	simWeight = preVal.simWeight
+	simWeight = pv.simWeight
 
 	ip_sim = computeIPSim(user1['buyer_ip'], user2['buyer_ip'])
 	deviceID_sim = computeDevIDSim(user1['equipment_id'], user2['equipment_id'])
@@ -64,7 +68,7 @@ def computePromotionSim(promotions1, promotions2):
 		return len(intersection)/float(len(union))
 	except:
 		print "Promotion exception"
-		return preVal.DEFAULTSIM
+		return pv.DEFAULTSIM
 
 
 def computeIPSim(buyer_ips1, buyer_ips2):
@@ -76,7 +80,7 @@ def computeIPSim(buyer_ips1, buyer_ips2):
 		return len(intersection)/float(len(union))
 	except:
 		print "IP exception"
-		return preVal.DEFAULTSIM
+		return pv.DEFAULTSIM
 
 
 def computeDevIDSim(devIDs1, devIDs2):
@@ -88,10 +92,10 @@ def computeDevIDSim(devIDs1, devIDs2):
 			union = set(devids1).union(set(devids2))
 			return len(intersection)/float(len(union))
 		else:
-			return preVal.DEFAULTSIM
+			return pv.DEFAULTSIM
 	except:
 		print "DevID exception"
-		return preVal.DEFAULTSIM
+		return pv.DEFAULTSIM
 
 
 def computePoiSim(poi1, poi2):
@@ -114,4 +118,4 @@ def computePoiSim(poi1, poi2):
 
 	except:
 		print "POI exception"
-		return preVal.DEFAULTSIM
+		return pv.DEFAULTSIM
