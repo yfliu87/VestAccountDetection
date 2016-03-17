@@ -22,7 +22,7 @@ optimalDepth = None
 optimalBin = None
 
 
-def run(sparkContext):
+def train(sparkContext):
 	#truncate raw data to managable amount
 	fp.truncate(pv.mergedAccountFile, pv.truncatedFile, pv.truncateLineCount)
 
@@ -31,8 +31,6 @@ def run(sparkContext):
 	rawDataFrame = fp.readData(pv.trainingFile)
 
 	simMat = cm.getSimilarityMatrixMultiProcess(rawDataFrame)
-
-	#sparkContext = SparkContext()
 
 	model, unifiedRDDVecs = cluster.getClusterModel(sparkContext, simMat, rawDataFrame, pv.clusterNum, pv.dimensionReductionNum, pv.eigenVecFile)
 
@@ -48,7 +46,7 @@ def run(sparkContext):
 	Utils.logMessage("\nCluster precision: \nTraining error %s , Test error %s" %(str(trainingError), str(testError)))
 
 '''
-def run(recordCount, clusterNum, dimension, maxDepth, maxBin):
+def train(recordCount, clusterNum, dimension, maxDepth, maxBin):
 	global writer, optimalClusterModel, optimalClassificationModel, minTrainingError, minTestError, minSSE,optimalRecord, optimalClusterNum, optimalDimension, optimalDepth, optimalBin
 	
 	#fp.truncate(pv.sourceFile, pv.truncatedFile, recordCount)
@@ -93,7 +91,7 @@ if __name__ == '__main__':
 			for dimension in [12]:
 				for maxDepth in [5]:
 					for maxBin in [32]:
-						run(recordCount, clusterNum, dimension, maxDepth, maxBin)
+						train(recordCount, clusterNum, dimension, maxDepth, maxBin)
 
 		writer.write('\nCurrent run optimal param, record %s, cluster %s, dimension %s, maxDepth %s, maxBin %s' %(str(optimalRecord), str(optimalClusterNum), str(optimalDimension), str(optimalDepth), str(optimalBin)))
 	writer.write("\n\toptimal cluster sse: " + str(minSSE) + ', classification training err: ' + str(minTrainingError) + ', test err: ' + str(minTestError))
@@ -101,5 +99,4 @@ if __name__ == '__main__':
 	writer.close()
 	optimalClusterModel.save(sparkContext, '/home/yifei/TestData/data/realdata/cluster.model')
 	#optimalClassificationModel.save(sparkContext,'/home/yifei/TestData/data/realdata/classificationModel.mod')
-	#run()
 '''

@@ -79,8 +79,7 @@ def merge(targetFile, files):
 
 	Utils.logMessage("\nMerge account finished")
 
-def run(sparkContext):
-	#global sparkContext, writer
+def train(sparkContext):
 	Utils.logMessage("\nClassification model started")
 	pd.read_table(pv.processedFile, sep=',',encoding='utf-8').to_csv(pv.processedFile, header=False, index=False,encoding='utf-8')
 	truncatedAccounts = sparkContext.textFile(pv.processedFile).take(pv.truncateLineCount - 1)
@@ -90,10 +89,10 @@ def run(sparkContext):
 		for impurity in ['entropy']:
 			for maxDepth in [4]:
 				for maxBin in [16]:
-					runWithParam(sparkContext, rawData, ratio, impurity, maxDepth, maxBin)
+					trainWithParam(sparkContext, rawData, ratio, impurity, maxDepth, maxBin)
 
 
-def runWithParam(sparkContext, rawData, ratio, impurity, maxDepth, maxBin):
+def trainWithParam(sparkContext, rawData, ratio, impurity, maxDepth, maxBin):
 	trainingSet, testSet = rawData.randomSplit([ratio, 1-ratio])
 
 	decisionTreeModel, trainingError, testError = DecisionTreeProcess(trainingSet, testSet, impurity, maxDepth, maxBin)
@@ -227,7 +226,7 @@ if __name__ == '__main__':
 
 	#preprocess()
 
-	#run()
+	#train()
 
 	#writer.write('\n\nFinal optimal param\nminTrainingError %s, minTestError %s' %(str(minTrainingError), str(minTestError)))
 	#writer.close()

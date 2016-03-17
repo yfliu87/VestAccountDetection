@@ -2,7 +2,6 @@
 
 def evaluateModel(model, rdd):
 	sse = model.computeCost(rdd)
-	print "\nSSE: " + str(sse)
 	return sse
 
 def selfDefinedError(label, prediction):
@@ -15,6 +14,5 @@ def selfDefinedError(label, prediction):
 
 def calculateErrorRate(rdd):
 	error = rdd.filter(lambda (v,p): selfDefinedError(v,p)).count()/float(rdd.count())
-	#print "\nError rate: " + str(error)
 	return error
 

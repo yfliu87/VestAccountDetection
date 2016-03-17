@@ -13,10 +13,8 @@ import FileParser as fp
 import Utils
 
 sc = SparkContext()
-clusterAccountMap = {}
 
 def demo(count):
-
 	for idx in xrange(pv.truncateLineCount, pv.truncateLineCount + count):
 		clusterModel, classificationModel = loadModel()
 
@@ -52,11 +50,8 @@ def demo(count):
 
 				removeModelFolder()
 
-				#retrain classification model
-				classification.run(sc)
-
-				#retrain cluster model
-				cluster.run(sc)
+				classification.train(sc)
+				cluster.train(sc)
 			else:
 				print "\nLow risk account, go for next"
 
@@ -65,28 +60,16 @@ def demo(count):
 
 def loadModel():
 	clusterModel = KMeansModel.load(sc, pv.clusterModelPath)
-	buildClusterAccountMap(pv.clusterIDCenterFile)
 	classificationModel = DecisionTreeModel.load(sc, pv.classificationModelPath)
 	Utils.logMessage("\nLoad cluster & classification model finished")
 	return clusterModel, classificationModel
 
-def buildClusterAccountMap(clusterAccountFilePath):
-	df = fp.readData(clusterAccountFilePath)
-	for idx in xrange(df.shape[0]):
-		pin = df.loc[idx]['buyer_pin']
-		cluster = df.loc[idx]['center']
-
-		if cluster not in clusterAccountMap:
-			clusterAccountMap[cluster] = []
-
-		clusterAccountMap[cluster].append(idx)
 
 def countByFeatures(record):
-	ipNum = len(record['buyer_ip'].split('|'))
-	devIDNum = len(record['equipment_id'].split('|'))
+	ipNum = len(str(record['buyer_ip']).split('|'))
+	devIDNum = len(str(record['equipment_id']).split('|'))
 	addrNum = len(record['buyer_poi'].split('|'))
-	promotionNum = len(record['promotion_id'].split('|'))
- 
+	promotionNum = len(str(record['promotion_id']).split('|'))
 	return (record['label'], record['buyer_pin'], ipNum ** 2, devIDNum ** 3, addrNum ** 2, promotionNum)
 
 
@@ -96,19 +79,6 @@ def calculateSim(df, matSize):
 	for i in xrange(matSize):
 		ret.append(compute.computeSimilarity(df.loc[i], cur))
 	return ret
-
-
-def checkSimilarAccounts(df, curAccount, clusteredAccounts):
-	maxSim = 0.0
-	candidateIdx = -1
-	for item in clusteredAccounts:
-		account = df.loc(item)
-		sim = compute.computeSimilarity(curAccount, account)
-		if sim > maxSim:
-			maxSim = sim
-			candidateIdx = item
-
-	return getLabelByIdx(df, candidateIdx)
 
 
 def getLabelByIdx(df,idx):
@@ -122,30 +92,26 @@ def refreshRecord(record, newLabel):
 
 
 def removeModelFolder():
-	import os
 	import shutil
 	shutil.rmtree(pv.classificationModelPath)
 	shutil.rmtree(pv.clusterModelPath)
 
 
 def run():
-	#preprocess rule output file, mark, combine
 	classification.preprocess()
 
 	fp.shuffleRawData(pv.mergedAccountFile)
 
 	Utils.logMessage("\nPretraining model started")
 
-	#train cluster model
-	cluster.run(sc)
+	cluster.train(sc)
 
-	#train classification model
-	classification.run(sc)
+	classification.train(sc)
 
 	Utils.logMessage("\nPretraining model finished")
 	Utils.logMessage("\nInitial accounts %s " %str(pv.truncateLineCount - 1))
-	#random pick 10 records and make prediction
-	demo(10)
+
+	demo(100)
 
 if __name__ == '__main__':
 	run()

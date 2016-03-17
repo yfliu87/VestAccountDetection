@@ -44,8 +44,8 @@ def preprocess(sourceFile, targetFile, targetFields):
 
 def filterFields(line, fieldsIdx):
 	fields = line.replace('\n', '').split(',')
-
 	ret = ''
+
 	for i in fieldsIdx:
 		ret += (fields[i] + ',')
 
