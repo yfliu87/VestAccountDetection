@@ -110,3 +110,10 @@ def groupUserByCluster(rawDataFrame):
 				retDF = retDF.append(rawDataFrame.loc[idx], ignore_index=True)
 
 	return retDF
+
+
+def shuffleRawData(filePath):
+	df = pd.read_csv(filePath, encoding='utf-8')
+	df = df.copy()
+	df = df.reindex(np.random.permutation(df.index))
+	df.to_csv(filePath, index=False, encoding='utf-8')

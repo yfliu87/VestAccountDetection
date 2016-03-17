@@ -132,6 +132,8 @@ def run():
 	#preprocess rule output file, mark, combine
 	classification.preprocess()
 
+	fp.shuffleRawData(pv.mergedAccountFile)
+
 	Utils.logMessage("\nPretraining model started")
 
 	#train cluster model
