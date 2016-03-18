@@ -4,6 +4,38 @@ import Utils
 import PredefinedValues as pv 
 
 
+def getSimilarityMatrix(sparkContext, rawDataFrame):
+	if pv.outputDebugMsg:
+		print "\nCM getSimilarityMatrix"
+
+	vals = rawDataFrame.to_records(True, False).tolist()
+	broadcastData = sparkContext.broadcast(vals)
+	rawData = sparkContext.parallelize(vals)
+	simMat = rawData.map(lambda item: calculateSimVector(item, broadcastData)).sortBy(lambda item: item[0]).map(lambda item : item[1]).collect()
+
+	return np.matrix(simMat)
+
+
+def calculateSimVector(curRecord, broadcastData):
+	vals = broadcastData.value
+	simVector = []
+	for i in xrange(len(vals)):
+		simVector.append(computeSimByFields(curRecord[2:], vals[i][2:]))
+
+	return curRecord[0], simVector
+
+
+def computeSimByFields(current, reference):
+	simWeight = pv.simWeight
+
+	ip_sim = computeIPSim(current[0], reference[0])
+	deviceID_sim = computeDevIDSim(current[1], reference[1])
+	poi_sim = computePoiSim(current[2], reference[2])
+	promotion_sim = computePromotionSim(current[3], reference[3])
+	return (simWeight['buyer_ip']*ip_sim + simWeight['equipment_id']*deviceID_sim 
+		+ simWeight['buyer_poi']*poi_sim + simWeight['promotion_id']*promotion_sim)
+
+
 def getSimilarityMatrixMultiProcess(rawDataFrame):
 	from multiprocessing import Pool
 	rows = rawDataFrame.shape[0]
@@ -63,6 +95,7 @@ def computePromotionSim(promotions1, promotions2):
 	try:
 		proms1 = promotions1.split('|')
 		proms2 = promotions2.split('|')
+
 		intersection = set(proms1).intersection(set(proms2))
 		union = set(proms1).union(set(proms2))
 		return len(intersection)/float(len(union))
