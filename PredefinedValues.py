@@ -38,6 +38,7 @@ rule4AccountFile = '/home/yifei/TestData/data/realdata/output_rule4.txt'
 rule5AccountFile = '/home/yifei/TestData/data/realdata/output_rule5.txt' 
 rule6AccountFile = '/home/yifei/TestData/data/realdata/output_rule6.txt' 
 mergedAccountFile = '/home/yifei/TestData/data/realdata/mergedAccount.txt' 
+fileForClusterModel = '/home/yifei/TestData/data/realdata/clusterRawData.txt'
 
 #below params are defined for mixed model demo
 classificationModelPath = '/home/yifei/TestData/data/realdata/classification.model'

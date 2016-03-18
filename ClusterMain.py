@@ -1,5 +1,6 @@
 #-*-coding:utf-8-*-
 from pyspark import SparkContext
+import pandas as pd
 import ClusterModule as cluster
 import FileParser as fp
 import ComputeModule as cm
@@ -28,9 +29,14 @@ def train(sparkContext):
 
 	fp.preprocess(pv.truncatedFile, pv.processedFile, pv.targetFields)
 
-	rawDataFrame = fp.readData(pv.trainingFile)
+	#rawDataFrame = fp.readData(pv.trainingFile)
+	#simMat = cm.getSimilarityMatrixMultiProcess(rawDataFrame)
 
-	simMat = cm.getSimilarityMatrixMultiProcess(rawDataFrame)
+	pd.read_csv(pv.trainingFile, sep=',',encoding='utf-8').to_csv(pv.fileForClusterModel, index=False, encoding='utf-8')
+
+	rawDataFrame = pd.read_csv(pv.fileForClusterModel, sep=',',encoding='utf-8')
+	
+	simMat = cm.getSimilarityMatrix(sparkContext, rawDataFrame)
 
 	model, unifiedRDDVecs = cluster.getClusterModel(sparkContext, simMat, rawDataFrame, pv.clusterNum, pv.dimensionReductionNum, pv.eigenVecFile)
 
