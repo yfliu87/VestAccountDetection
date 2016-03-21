@@ -45,3 +45,4 @@ classificationModelPath = '/home/yifei/TestData/data/realdata/classification.mod
 clusterModelPath = '/home/yifei/TestData/data/realdata/cluster.model'
 
 outputDebugMsg = False
+simThreshold = 75

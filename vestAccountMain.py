@@ -36,29 +36,29 @@ def demo(count):
 		else:
 			Utils.logMessage("\nPredicted label: %s, risky account, double check using cluster model" %str(predictedLabel))
 
-			#calculate similarity with existing simMatrix
 			sim = calculateSim(df, idx)
 
-			if max(sim) > simThreshold:
+			if max(sim) > pv.simThreshold:
+				print "max sim: ", max(sim)
 				mostSimilarAccountIdx = sim.index(max(sim))
-				newLabel = getLabelByIdx(df, mostSimilarAccountIdx)
+				labelFromMostSimilarAccount = getLabelByIdx(df, mostSimilarAccountIdx)
 
-				Utils.logMessage("\n\tLabel of most similar account is %s" %str(newLabel))
+				Utils.logMessage("\n\tLabel of most similar account is %s" %str(labelFromMostSimilarAccount))
 
-				if newLabel >= predictedLabel:
-					updateLabelForNextRoundTrain()
+				if labelFromMostSimilarAccount >= predictedLabel:
+					updateLabelForNextRoundTrain(idx, df, record, labelFromMostSimilarAccount, sc)
 				else:
-					Utils.logMessage("\n\t\tLow risk account, go for next")
+					updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc)
 			else:
 				updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc)
 
 	Utils.logMessage("Job Finished!")
 
 
-def updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc):
+def updateLabelForNextRoundTrain(idx, df, record, newLabel, sc):
 	Utils.logMessage("\n\tSuspecious account, update label and mark as training data for next round")
 	pv.truncateLineCount = idx
-	df.loc[idx] = refreshRecord(record, predictedLabel)
+	df.loc[idx] = refreshRecord(record, newLabel)
 	df.to_csv(pv.mergedAccountFile, index=False, encoding='utf-8')
 
 	removeModelFolder()
@@ -122,7 +122,7 @@ def run():
 	Utils.logMessage("\nPretraining model finished")
 	Utils.logMessage("\nInitial accounts %s " %str(pv.truncateLineCount - 1))
 
-	demo(10)
+	demo(50)
 
 	Utils.logTime()
 
