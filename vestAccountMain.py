@@ -16,7 +16,8 @@ sc = SparkContext()
 
 def demo(count):
 	for idx in xrange(pv.truncateLineCount, pv.truncateLineCount + count):
-		Utils.logMessage("\nUser %s" %str(idx))
+		if pv.outputDebugMsg:
+			Utils.logMessage("\nUser %s" %str(idx))
 
 		clusterModel, classificationModel = loadModel()
 
@@ -39,25 +40,31 @@ def demo(count):
 
 			#calculate similarity with existing simMatrix
 			sim = calculateSim(df, idx)
-			mostSimilarAccountIdx = sim.index(max(sim))
-			newLabel = getLabelByIdx(df, mostSimilarAccountIdx)
 
-			Utils.logMessage("\nLabel of most similar account is %s" %str(newLabel))
+			if max(sim) > simThreshold:
+				mostSimilarAccountIdx = sim.index(max(sim))
+				newLabel = getLabelByIdx(df, mostSimilarAccountIdx)
 
-			if newLabel >= predictedLabel:
-				print "\nSuspecious account, mark as training data for next round"
-				pv.truncateLineCount = idx
-				df.loc[idx] = refreshRecord(record, predictedLabel)
-				df.to_csv(pv.mergedAccountFile, index=False, encoding='utf-8')
+				Utils.logMessage("\nLabel of most similar account is %s" %str(newLabel))
 
-				removeModelFolder()
-
-				classification.train(sc)
-				cluster.train(sc)
+				if newLabel >= predictedLabel:
+					updateLabelForNextRoundTrain()
+				else:
+					print "\nLow risk account, go for next"
 			else:
-				print "\nLow risk account, go for next"
+				updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc)
+				Utils.logMessage("Job Finished!")
 
-	Utils.logMessage("Job Finished!")
+
+def updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc):
+	print "\nSuspecious account, update label and mark as training data for next round"
+	pv.truncateLineCount = idx
+	df.loc[idx] = refreshRecord(record, predictedLabel)
+	df.to_csv(pv.mergedAccountFile, index=False, encoding='utf-8')
+
+	removeModelFolder()
+	classification.train(sc)
+	cluster.train(sc)
 
 
 def loadModel():
@@ -80,7 +87,7 @@ def countByFeatures(record):
 def calculateSim(df, matSize):
 	cur = df.loc[matSize]
 	ret = []
-	for i in xrange(matSize):
+	for i in range(matSize):
 		ret.append(compute.computeSimilarity(df.loc[i], cur))
 	return ret
 
@@ -102,6 +109,7 @@ def removeModelFolder():
 
 
 def run():
+	Utils.logTime()
 	classification.preprocess()
 
 	fp.shuffleRawData(pv.mergedAccountFile)
@@ -115,7 +123,9 @@ def run():
 	Utils.logMessage("\nPretraining model finished")
 	Utils.logMessage("\nInitial accounts %s " %str(pv.truncateLineCount - 1))
 
-	demo(100)
+	demo(10)
+
+	Utils.logTime()
 
 if __name__ == '__main__':
 	run()
