@@ -21,22 +21,20 @@ def demo(count):
 
 		clusterModel, classificationModel = loadModel()
 
-		#take random account from merged file
 		df = fp.readData(pv.mergedAccountFile)
 		record = df.loc[idx]
 
-		#organize feature count
 		compressedRecord = countByFeatures(record)
+
 		labeledRecord = LabeledPoint(compressedRecord[0], compressedRecord[2:])
 
-		#predict cluster
 		predictedLabel = classificationModel.predict(labeledRecord.features)
 
 		if predictedLabel <= 1:
-			print "\nPredicted label: %s, safe account, go for next" %str(predictedLabel)
+			Utils.logMessage("\nPredicted label: %s, safe account, go for next" %str(predictedLabel))
 			continue
 		else:
-			print "\nPredicted label: %s, risky account, double check using cluster model" %str(predictedLabel)
+			Utils.logMessage("\nPredicted label: %s, risky account, double check using cluster model" %str(predictedLabel))
 
 			#calculate similarity with existing simMatrix
 			sim = calculateSim(df, idx)
@@ -45,19 +43,20 @@ def demo(count):
 				mostSimilarAccountIdx = sim.index(max(sim))
 				newLabel = getLabelByIdx(df, mostSimilarAccountIdx)
 
-				Utils.logMessage("\nLabel of most similar account is %s" %str(newLabel))
+				Utils.logMessage("\n\tLabel of most similar account is %s" %str(newLabel))
 
 				if newLabel >= predictedLabel:
 					updateLabelForNextRoundTrain()
 				else:
-					print "\nLow risk account, go for next"
+					Utils.logMessage("\n\t\tLow risk account, go for next")
 			else:
 				updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc)
-				Utils.logMessage("Job Finished!")
+
+	Utils.logMessage("Job Finished!")
 
 
 def updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc):
-	print "\nSuspecious account, update label and mark as training data for next round"
+	Utils.logMessage("\n\tSuspecious account, update label and mark as training data for next round")
 	pv.truncateLineCount = idx
 	df.loc[idx] = refreshRecord(record, predictedLabel)
 	df.to_csv(pv.mergedAccountFile, index=False, encoding='utf-8')
