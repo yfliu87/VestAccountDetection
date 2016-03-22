@@ -22,7 +22,7 @@ eigenVecFile = '/home/yifei/TestData/data/realdata/eigenVec.csv'
 clusterIDCenterFile = '/home/yifei/TestData/data/realdata/clustered_id_center.csv'
 clusterIDFile = '/home/yifei/TestData/data/realdata/clustered_id.csv'
 IDFOREACHCLUSTER = 20
-truncateLineCount = 501
+truncateLineCount = 1001
 clusterNum = truncateLineCount/IDFOREACHCLUSTER
 dimensionReductionNum = 10
 treeMaxDepth = 4
@@ -43,6 +43,8 @@ fileForClusterModel = '/home/yifei/TestData/data/realdata/clusterRawData.txt'
 #below params are defined for mixed model demo
 classificationModelPath = '/home/yifei/TestData/data/realdata/classification.model'
 clusterModelPath = '/home/yifei/TestData/data/realdata/cluster.model'
-
+simMatrixFile = '/home/yifei/TestData/data/realdata/simMat.txt'
+isTrainingRound = True
 outputDebugMsg = False
+isLastRecord = False
 simThreshold = 75

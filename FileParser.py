@@ -58,6 +58,12 @@ def filterFields(line, fieldsIdx):
 def readData(filepath):
 	return pd.read_csv(filepath, encoding='utf-8')
 
+def readSimMatrix(filePath):
+	return pd.read_csv(filePath, header = None, encoding='utf-8')
+
+
+def recordSimMatrix(simMat, filePath):
+	pd.DataFrame(simMat).to_csv(filePath ,header=False, index=False, encoding='utf-8')
 
 def outputMatrix(matrix, targetFile):
 	pd.DataFrame(matrix).to_csv(targetFile, header=False, index=False)

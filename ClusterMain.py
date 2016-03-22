@@ -32,18 +32,19 @@ def train(sparkContext):
 
 	simMat = cm.getSimilarityMatrix(sparkContext, rawDataFrame)
 
-	model, unifiedRDDVecs = cluster.getClusterModel(sparkContext, simMat, rawDataFrame, pv.clusterNum, pv.dimensionReductionNum, pv.eigenVecFile)
+	fp.recordSimMatrix(simMat, pv.simMatrixFile)
+
+	model, unifiedRDDVecs = cluster.getClusterModel(sparkContext, simMat, rawDataFrame, (pv.truncateLineCount/pv.IDFOREACHCLUSTER), pv.dimensionReductionNum, pv.eigenVecFile)
 
 	eva.evaluateModel(model, unifiedRDDVecs)
 
 	fp.outputNodesInSameCluster(model, unifiedRDDVecs, rawDataFrame, pv.clusterIDCenterFile, pv.clusterIDFile)
 
-	decisionTreeModel, trainingError, testError = classification.process(sparkContext, pv.clusterNum, pv.treeMaxDepth, pv.treeMaxBins, pv.eigenVecFile, pv.clusterIDFile)
+	decisionTreeModel = classification.process(sparkContext, (pv.truncateLineCount/pv.IDFOREACHCLUSTER), pv.treeMaxDepth, pv.treeMaxBins, pv.eigenVecFile, pv.clusterIDFile)
 
 	model.save(sparkContext, pv.clusterModelPath)
 
 	Utils.logMessage("\nTrain cluster model finished")
-	Utils.logMessage("\nCluster precision: \n\tTraining error %s , Test error %s" %(str(trainingError), str(testError)))
 
 
 if __name__ == '__main__':

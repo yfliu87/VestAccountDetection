@@ -14,17 +14,17 @@ def process(sc, dtClusterNum, dtMaxDepth, dtMaxBins, eigenVecFile, markedCluster
 	trainingSet, testSet = labeledClusterIdEigenVecMapRdd.randomSplit([0.7, 0.3])
 
 	decisionTreeModel = DecisionTree.trainClassifier(trainingSet, numClasses = dtClusterNum,
-														categoricalFeaturesInfo={},impurity='gini',maxDepth=dtMaxDepth, maxBins=dtMaxBins)
+														categoricalFeaturesInfo={},impurity='entropy',maxDepth=dtMaxDepth, maxBins=dtMaxBins)
 
 	predictions = decisionTreeModel.predict(trainingSet.map(lambda item: item.features))
 	trainingLabelsAndPredictions = trainingSet.map(lambda item: item.label).zip(predictions)
-	trainingError = eva.calculateErrorRate(trainingLabelsAndPredictions)
+	eva.clusterModelMeasurements("Training set", trainingLabelsAndPredictions)
 
 	predictions = decisionTreeModel.predict(testSet.map(lambda item: item.features))
 	testLabelsAndPredictions = testSet.map(lambda item: item.label).zip(predictions)
-	testError = eva.calculateErrorRate(testLabelsAndPredictions)
+	eva.clusterModelMeasurements("Test set", testLabelsAndPredictions)
 
-	return decisionTreeModel, trainingError, testError
+	return decisionTreeModel
 
 
 def removeVirtualPart(item):

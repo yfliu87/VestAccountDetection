@@ -2,9 +2,30 @@
 import numpy as np
 import Utils
 import PredefinedValues as pv 
+import FileParser as fp
 
 
 def getSimilarityMatrix(sparkContext, rawDataFrame):
+	if pv.isTrainingRound:
+		return getSimilarityMatrixByRDD(sparkContext, rawDataFrame)
+	else:
+		preSimMat = fp.readSimMatrix(pv.simMatrixFile)
+		current = rawDataFrame.loc[rawDataFrame.shape[0] - 1]
+
+		simResult = []
+		for i in range(rawDataFrame.shape[0] - 1):
+			simResult.append(computeSimByFields(current, rawDataFrame.loc[i]))
+
+		return mergeSimMatrix(preSimMat, simResult)
+
+
+def mergeSimMatrix(preSimMat, simResult):
+	rowExtendMat = np.row_stack((preSimMat, np.array(simResult)))
+	simResult.append(100)
+	return np.column_stack((rowExtendMat, np.array(simResult).T))
+
+
+def getSimilarityMatrixByRDD(sparkContext, rawDataFrame):
 	if pv.outputDebugMsg:
 		print "\nCM getSimilarityMatrix"
 
@@ -93,12 +114,15 @@ def computeSimilarity(user1, user2):
 	
 def computePromotionSim(promotions1, promotions2):
 	try:
-		proms1 = promotions1.split('|')
-		proms2 = promotions2.split('|')
+		if isinstance(promotions1, unicode) and isinstance(promotions2, unicode):
+			proms1 = promotions1.split('|')
+			proms2 = promotions2.split('|')
 
-		intersection = set(proms1).intersection(set(proms2))
-		union = set(proms1).union(set(proms2))
-		return len(intersection)/float(len(union))
+			intersection = set(proms1).intersection(set(proms2))
+			union = set(proms1).union(set(proms2))
+			return len(intersection)/float(len(union))
+		else:
+			return pv.DEFAULTSIM
 	except:
 		print "Promotion exception"
 		return pv.DEFAULTSIM
@@ -106,11 +130,14 @@ def computePromotionSim(promotions1, promotions2):
 
 def computeIPSim(buyer_ips1, buyer_ips2):
 	try:
-		ips1 = buyer_ips1.split('|')
-		ips2 = buyer_ips2.split('|')
-		intersection = set(ips1).intersection(set(ips2))
-		union = set(ips1).union(set(ips2))
-		return len(intersection)/float(len(union))
+		if isinstance(buyer_ips1, unicode) and isinstance(buyer_ips2, unicode):
+			ips1 = buyer_ips1.split('|')
+			ips2 = buyer_ips2.split('|')
+			intersection = set(ips1).intersection(set(ips2))
+			union = set(ips1).union(set(ips2))
+			return len(intersection)/float(len(union))
+		else:
+			return pv.DEFAULTSIM
 	except:
 		print "IP exception"
 		return pv.DEFAULTSIM
@@ -133,22 +160,24 @@ def computeDevIDSim(devIDs1, devIDs2):
 
 def computePoiSim(poi1, poi2):
 	try:
-		pois1 = poi1.split('|')
-		pois2 = poi2.split('|')
+		if isinstance(poi1, unicode) and isinstance(poi2, unicode):
+			pois1 = poi1.split('|')
+			pois2 = poi2.split('|')
 
-		fullAdd1 = []
-		fullAdd2 = []
+			fullAdd1 = []
+			fullAdd2 = []
 		
-		for item in pois1:
-			fullAdd1 += item.split('_')
+			for item in pois1:
+				fullAdd1 += item.split('_')
 
-		for item in pois2:
-			fullAdd2 += item.split('_')
+			for item in pois2:
+				fullAdd2 += item.split('_')
 
-		intersection = set(fullAdd1).intersection(set(fullAdd2))
-		union = set(fullAdd1).union(set(fullAdd2))
-		return len(intersection)/float(len(union))
-
+			intersection = set(fullAdd1).intersection(set(fullAdd2))
+			union = set(fullAdd1).union(set(fullAdd2))
+			return len(intersection)/float(len(union))
+		else:
+			return pv.DEFAULTSIM
 	except:
 		print "POI exception"
 		return pv.DEFAULTSIM

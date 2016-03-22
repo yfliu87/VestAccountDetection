@@ -15,7 +15,7 @@ import Utils
 sc = SparkContext()
 
 def demo(count):
-	for idx in xrange(pv.truncateLineCount, pv.truncateLineCount + count):
+	for idx in xrange(pv.truncateLineCount + 1, pv.truncateLineCount + count + 1):
 		if pv.outputDebugMsg:
 			Utils.logMessage("\nUser %s" %str(idx))
 
@@ -32,7 +32,7 @@ def demo(count):
 
 		if predictedLabel <= 1:
 			Utils.logMessage("\nPredicted label: %s, safe account, go for next" %str(predictedLabel))
-			continue
+			updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc)
 		else:
 			Utils.logMessage("\nPredicted label: %s, risky account, double check using cluster model" %str(predictedLabel))
 
@@ -56,7 +56,7 @@ def demo(count):
 
 
 def updateLabelForNextRoundTrain(idx, df, record, newLabel, sc):
-	Utils.logMessage("\n\tSuspecious account, update label and mark as training data for next round")
+	Utils.logMessage("\n\tSuspecious account, update label and mark as training data for next round %s" %str(idx))
 	pv.truncateLineCount = idx
 	df.loc[idx] = refreshRecord(record, newLabel)
 	df.to_csv(pv.mergedAccountFile, index=False, encoding='utf-8')
@@ -122,7 +122,8 @@ def run():
 	Utils.logMessage("\nPretraining model finished")
 	Utils.logMessage("\nInitial accounts %s " %str(pv.truncateLineCount - 1))
 
-	demo(50)
+	pv.isTrainingRound = False
+	demo(10000)
 
 	Utils.logTime()
 

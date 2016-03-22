@@ -85,8 +85,7 @@ def train(sparkContext):
 def trainWithParam(sparkContext, rawData, ratio, impurity, maxDepth, maxBin):
 	trainingSet, testSet = rawData.randomSplit([ratio, 1-ratio])
 
-	decisionTreeModel, trainingError, testError = DecisionTreeProcess(trainingSet, testSet, impurity, maxDepth, maxBin)
-	print '\nDecision Tree Training Err: %s, Test Err: %s' %(str(trainingError), str(testError))
+	decisionTreeModel = DecisionTreeProcess(trainingSet, testSet, impurity, maxDepth, maxBin)
 	decisionTreeModel.save(sparkContext, pv.classificationModelPath)
 
 
@@ -108,13 +107,13 @@ def DecisionTreeProcess(trainingSet, testSet, imp, dtMaxDepth, dtMaxBins):
 
 	predictions = decisionTreeModel.predict(trainingSet.map(lambda item: item.features))
 	trainingLabelsAndPredictions = trainingSet.map(lambda item: item.label).zip(predictions)
-	trainingError = eva.calculateErrorRate(trainingLabelsAndPredictions)
+	eva.classificationModelMeasurements("Training set", trainingLabelsAndPredictions)
 
 	predictions = decisionTreeModel.predict(testSet.map(lambda item: item.features))
 	testLabelsAndPredictions = testSet.map(lambda item: item.label).zip(predictions)
-	testError = eva.calculateErrorRate(testLabelsAndPredictions)
+	eva.classificationModelMeasurements("Test set", testLabelsAndPredictions)
 
-	return decisionTreeModel, trainingError, testError
+	return decisionTreeModel
 
 
 if __name__ == '__main__':
