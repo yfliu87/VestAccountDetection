@@ -27,6 +27,7 @@ def demo(count):
 			clusterModel, classificationModel = loadModel()
 			isNewModel = False
 
+		counter += 1
 		df = fp.readData(pv.mergedAccountFile)
 		record = df.loc[idx]
 
@@ -57,7 +58,6 @@ def demo(count):
 			else:
 				updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc, counter,"\nNo similar account found, recalculate sim matrix")
 
-			counter += 1
 
 	Utils.logMessage("Job Finished!")
 
@@ -75,7 +75,7 @@ def updateLabelForNextRoundTrain(idx, df, record, newLabel, sc, counter, msg):
 		classification.train(sc)
 		cluster.train(sc)
 	else:
-		cluster.calculateSimMat(sc)
+		cluster.calculateSimMat(sc, df[0:idx-1])
 
 
 def loadModel():
