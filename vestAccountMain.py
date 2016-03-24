@@ -48,10 +48,10 @@ def demo(count):
 
 				if abs(labelFromMostSimilarAccount - predictedLabel) <= 1:
 					print "\nJust recalculate sim matrix"
-					df.loc[idx] = refreshRecord(record, newLabel)
+					df.loc[idx] = refreshRecord(record, predictedLabel)
 					df.to_csv(pv.mergedAccountFile, index=False, encoding='utf-8')
 					pv.truncateLineCount = idx
-					cluster.calculateSimMat()
+					cluster.calculateSimMat(sc)
 				elif labelFromMostSimilarAccount > predictedLabel:
 					updateLabelForNextRoundTrain(idx, df, record, labelFromMostSimilarAccount, sc, counter)
 				else:
@@ -60,6 +60,7 @@ def demo(count):
 				updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc, counter)
 
 			counter += 1
+
 	Utils.logMessage("Job Finished!")
 
 
@@ -73,6 +74,8 @@ def updateLabelForNextRoundTrain(idx, df, record, newLabel, sc, counter):
 		removeModelFolder()
 		classification.train(sc)
 		cluster.train(sc)
+	else:
+		cluster.calculateSimMat(sc)
 
 
 def loadModel():

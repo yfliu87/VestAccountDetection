@@ -21,7 +21,7 @@ optimalDepth = None
 optimalBin = None
 
 
-def calculateSimMat():
+def calculateSimMat(sparkContext):
 	fp.truncate(pv.mergedAccountFile, pv.truncatedFile, pv.truncateLineCount)
 	fp.preprocess(pv.truncatedFile, pv.processedFile, pv.targetFields)
 	pd.read_csv(pv.trainingFile, sep=',',encoding='utf-8').to_csv(pv.fileForClusterModel, index=False, encoding='utf-8')
