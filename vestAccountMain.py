@@ -13,8 +13,10 @@ import FileParser as fp
 import Utils
 
 sc = SparkContext()
+counter = 0
 
 def demo(count):
+	global counter
 	for idx in xrange(pv.truncateLineCount + 1, pv.truncateLineCount + count + 1):
 		if pv.outputDebugMsg:
 			Utils.logMessage("\nUser %s" %str(idx))
@@ -32,38 +34,45 @@ def demo(count):
 
 		if predictedLabel <= 1:
 			Utils.logMessage("\nPredicted label: %s, safe account, go for next" %str(predictedLabel))
-			updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc)
+			updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc, counter)
 		else:
 			Utils.logMessage("\nPredicted label: %s, risky account, double check using cluster model" %str(predictedLabel))
 
 			sim = calculateSim(df, idx)
 
 			if max(sim) > pv.simThreshold:
-				print "max sim: ", max(sim)
 				mostSimilarAccountIdx = sim.index(max(sim))
 				labelFromMostSimilarAccount = getLabelByIdx(df, mostSimilarAccountIdx)
 
 				Utils.logMessage("\n\tLabel of most similar account is %s" %str(labelFromMostSimilarAccount))
 
-				if labelFromMostSimilarAccount >= predictedLabel:
-					updateLabelForNextRoundTrain(idx, df, record, labelFromMostSimilarAccount, sc)
+				if abs(labelFromMostSimilarAccount - predictedLabel) <= 1:
+					print "\nJust recalculate sim matrix"
+					df.loc[idx] = refreshRecord(record, newLabel)
+					df.to_csv(pv.mergedAccountFile, index=False, encoding='utf-8')
+					pv.truncateLineCount = idx
+					cluster.calculateSimMat()
+				elif labelFromMostSimilarAccount > predictedLabel:
+					updateLabelForNextRoundTrain(idx, df, record, labelFromMostSimilarAccount, sc, counter)
 				else:
-					updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc)
+					updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc, counter)
 			else:
-				updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc)
+				updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc, counter)
 
+			counter += 1
 	Utils.logMessage("Job Finished!")
 
 
-def updateLabelForNextRoundTrain(idx, df, record, newLabel, sc):
+def updateLabelForNextRoundTrain(idx, df, record, newLabel, sc, counter):
 	Utils.logMessage("\n\tSuspecious account, update label and mark as training data for next round %s" %str(idx))
 	pv.truncateLineCount = idx
 	df.loc[idx] = refreshRecord(record, newLabel)
 	df.to_csv(pv.mergedAccountFile, index=False, encoding='utf-8')
 
-	removeModelFolder()
-	classification.train(sc)
-	cluster.train(sc)
+	if counter % 10000 == 0:
+		removeModelFolder()
+		classification.train(sc)
+		cluster.train(sc)
 
 
 def loadModel():
