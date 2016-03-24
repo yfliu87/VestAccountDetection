@@ -14,14 +14,18 @@ import Utils
 
 sc = SparkContext()
 counter = 0
+isNewModel = False
 
 def demo(count):
-	global counter
+	global counter, isNewModel
+
 	for idx in xrange(pv.truncateLineCount + 1, pv.truncateLineCount + count + 1):
 		if pv.outputDebugMsg:
 			Utils.logMessage("\nUser %s" %str(idx))
 
-		clusterModel, classificationModel = loadModel()
+		if isNewModel:
+			clusterModel, classificationModel = loadModel()
+			isNewModel = False
 
 		df = fp.readData(pv.mergedAccountFile)
 		record = df.loc[idx]
@@ -65,6 +69,8 @@ def updateLabelForNextRoundTrain(idx, df, record, newLabel, sc, counter, msg):
 	df.to_csv(pv.mergedAccountFile, index=False, encoding='utf-8')
 
 	if counter % 10000 == 0:
+		global isNewModel
+		isNewModel = True
 		removeModelFolder()
 		classification.train(sc)
 		cluster.train(sc)
