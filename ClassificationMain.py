@@ -107,11 +107,13 @@ def DecisionTreeProcess(trainingSet, testSet, imp, dtMaxDepth, dtMaxBins):
 
 	predictions = decisionTreeModel.predict(trainingSet.map(lambda item: item.features))
 	trainingLabelsAndPredictions = trainingSet.map(lambda item: item.label).zip(predictions)
-	eva.classificationModelMeasurements("Training set", trainingLabelsAndPredictions)
+	#eva.classificationModelMeasurements("Training set", trainingLabelsAndPredictions)
+	eva.calculateErrorRate("\nClassification model Training set", trainingLabelsAndPredictions)
 
 	predictions = decisionTreeModel.predict(testSet.map(lambda item: item.features))
 	testLabelsAndPredictions = testSet.map(lambda item: item.label).zip(predictions)
-	eva.classificationModelMeasurements("Test set", testLabelsAndPredictions)
+	#eva.classificationModelMeasurements("Test set", testLabelsAndPredictions)
+	eva.calculateErrorRate("\nClassification model Test set", testLabelsAndPredictions)
 
 	return decisionTreeModel
 

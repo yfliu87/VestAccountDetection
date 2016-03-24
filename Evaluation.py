@@ -16,6 +16,13 @@ def selfDefinedError(label, prediction):
 		return (True)
 
 
+def calculateErrorRate(msg, rdd):
+	error = rdd.filter(lambda(v,p): selfDefinedError(v, p)).count()/float(rdd.count())
+
+	Utils.logMessage(msg + " measurements")
+	Utils.logMessage("\tPrecision: " + str(1 - error))
+	
+
 def clusterModelMeasurements(msg, predictionLabelPair):
 	metrics = MulticlassMetrics(predictionLabelPair)
 

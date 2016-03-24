@@ -18,11 +18,13 @@ def process(sc, dtClusterNum, dtMaxDepth, dtMaxBins, eigenVecFile, markedCluster
 
 	predictions = decisionTreeModel.predict(trainingSet.map(lambda item: item.features))
 	trainingLabelsAndPredictions = trainingSet.map(lambda item: item.label).zip(predictions)
-	eva.clusterModelMeasurements("Training set", trainingLabelsAndPredictions)
+	#eva.clusterModelMeasurements("Training set", trainingLabelsAndPredictions)
+	eva.calculateErrorRate("\nCluster model Training set", trainingLabelsAndPredictions)
 
 	predictions = decisionTreeModel.predict(testSet.map(lambda item: item.features))
 	testLabelsAndPredictions = testSet.map(lambda item: item.label).zip(predictions)
-	eva.clusterModelMeasurements("Test set", testLabelsAndPredictions)
+	#eva.clusterModelMeasurements("Test set", testLabelsAndPredictions)
+	eva.calculateErrorRate("\nCluster model Test set", testLabelsAndPredictions)
 
 	return decisionTreeModel
 
