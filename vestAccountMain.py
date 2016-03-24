@@ -34,7 +34,7 @@ def demo(count):
 
 		if predictedLabel <= 1:
 			Utils.logMessage("\nPredicted label: %s, safe account, go for next" %str(predictedLabel))
-			updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc, counter)
+			updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc, counter, "\n\tRecalculate sim matrix")
 		else:
 			Utils.logMessage("\nPredicted label: %s, risky account, double check using cluster model" %str(predictedLabel))
 
@@ -46,26 +46,20 @@ def demo(count):
 
 				Utils.logMessage("\n\tLabel of most similar account is %s" %str(labelFromMostSimilarAccount))
 
-				if abs(labelFromMostSimilarAccount - predictedLabel) <= 1:
-					print "\nJust recalculate sim matrix"
-					df.loc[idx] = refreshRecord(record, predictedLabel)
-					df.to_csv(pv.mergedAccountFile, index=False, encoding='utf-8')
-					pv.truncateLineCount = idx
-					cluster.calculateSimMat(sc)
-				elif labelFromMostSimilarAccount > predictedLabel:
-					updateLabelForNextRoundTrain(idx, df, record, labelFromMostSimilarAccount, sc, counter)
+				if labelFromMostSimilarAccount > predictedLabel:
+					updateLabelForNextRoundTrain(idx, df, record, labelFromMostSimilarAccount, sc, counter, "\n\tSuspecious account, update label and mark as training data for next round %s" %str(idx))
 				else:
-					updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc, counter)
+					updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc, counter, "\n\tRecalculate sim matrix")
 			else:
-				updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc, counter)
+				updateLabelForNextRoundTrain(idx, df, record, predictedLabel, sc, counter,"\nNo similar account found, recalculate sim matrix")
 
 			counter += 1
 
 	Utils.logMessage("Job Finished!")
 
 
-def updateLabelForNextRoundTrain(idx, df, record, newLabel, sc, counter):
-	Utils.logMessage("\n\tSuspecious account, update label and mark as training data for next round %s" %str(idx))
+def updateLabelForNextRoundTrain(idx, df, record, newLabel, sc, counter, msg):
+	Utils.logMessage(msg)
 	pv.truncateLineCount = idx
 	df.loc[idx] = refreshRecord(record, newLabel)
 	df.to_csv(pv.mergedAccountFile, index=False, encoding='utf-8')
