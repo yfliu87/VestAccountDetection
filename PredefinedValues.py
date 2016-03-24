@@ -13,14 +13,13 @@ simWeight = {'buyer_ip':20,
 
 DEFAULTSIM = 0.0
 
-sourceFile ='/home/yifei/TestData/data/realdata/testdata_20160307.csv' 
-truncatedFile = '/home/yifei/TestData/data/realdata/truncated.csv'
-processedFile = '/home/yifei/TestData/data/realdata/processed.csv'
+truncatedFile = '/root/TestData/realdata/truncated.csv'
+processedFile = '/root/TestData/realdata/processed.csv'
 trainingFile = processedFile
 testFile = ''
-eigenVecFile = '/home/yifei/TestData/data/realdata/eigenVec.csv'
-clusterIDCenterFile = '/home/yifei/TestData/data/realdata/clustered_id_center.csv'
-clusterIDFile = '/home/yifei/TestData/data/realdata/clustered_id.csv'
+eigenVecFile = '/root/TestData/realdata/eigenVec.csv'
+clusterIDCenterFile = '/root/TestData/realdata/clustered_id_center.csv'
+clusterIDFile = '/root/TestData/realdata/clustered_id.csv'
 IDFOREACHCLUSTER = 20
 truncateLineCount = 1001
 clusterNum = truncateLineCount/IDFOREACHCLUSTER
@@ -29,22 +28,22 @@ treeMaxDepth = 4
 treeMaxBins = 16
 
 #below parameters only for classification model
-confirmedAccountFile = '/home/yifei/TestData/data/realdata/ruleFilteredAccount.txt'
-randomAccountFile = '/home/yifei/TestData/data/realdata/randomAccount.txt' 
-rule1AccountFile = '/home/yifei/TestData/data/realdata/output_rule1.txt' 
-rule2AccountFile = '/home/yifei/TestData/data/realdata/output_rule2.txt' 
-rule3AccountFile = '/home/yifei/TestData/data/realdata/output_rule3.txt' 
-rule4AccountFile = '/home/yifei/TestData/data/realdata/output_rule4.txt' 
-rule5AccountFile = '/home/yifei/TestData/data/realdata/output_rule5.txt' 
-rule6AccountFile = '/home/yifei/TestData/data/realdata/output_rule6.txt' 
-mergedAccountFile = '/home/yifei/TestData/data/realdata/mergedAccount.txt' 
-fileForClusterModel = '/home/yifei/TestData/data/realdata/clusterRawData.txt'
+confirmedAccountFile = '/root/TestData/realdata/ruleFilteredAccount.txt'
+randomAccountFile = '/root/TestData/realdata/randomAccount.txt' 
+rule1AccountFile = '/root/TestData/realdata/output_rule1.txt' 
+rule2AccountFile = '/root/TestData/realdata/output_rule2.txt' 
+rule3AccountFile = '/root/TestData/realdata/output_rule3.txt' 
+rule4AccountFile = '/root/TestData/realdata/output_rule4.txt' 
+rule5AccountFile = '/root/TestData/realdata/output_rule5.txt' 
+rule6AccountFile = '/root/TestData/realdata/output_rule6.txt' 
+mergedAccountFile = '/root/TestData/realdata/mergedAccount.txt' 
+fileForClusterModel = '/root/TestData/realdata/clusterRawData.txt'
 
 #below params are defined for mixed model demo
-classificationModelPath = '/home/yifei/TestData/data/realdata/classification.model'
-clusterModelPath = '/home/yifei/TestData/data/realdata/cluster.model'
-simMatrixFile = '/home/yifei/TestData/data/realdata/simMat.txt'
+classificationModelPath = '/root/TestData/realdata/classification.model'
+clusterModelPath = '/root/TestData/realdata/cluster.model'
+simMatrixFile = '/root/TestData/realdata/simMat.txt'
 isTrainingRound = True
 outputDebugMsg = False
 isLastRecord = False
-simThreshold = 75
+simThreshold = 50
