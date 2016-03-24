@@ -131,6 +131,8 @@ def run():
 
 	classification.train(sc)
 
+	global isNewModel
+	isNewModel = True
 	Utils.logMessage("\nPretraining model finished")
 	Utils.logMessage("\nInitial accounts %s " %str(pv.truncateLineCount - 1))
 
