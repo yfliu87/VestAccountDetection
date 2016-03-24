@@ -21,6 +21,15 @@ optimalDepth = None
 optimalBin = None
 
 
+def calculateSimMat():
+	fp.truncate(pv.mergedAccountFile, pv.truncatedFile, pv.truncateLineCount)
+	fp.preprocess(pv.truncatedFile, pv.processedFile, pv.targetFields)
+	pd.read_csv(pv.trainingFile, sep=',',encoding='utf-8').to_csv(pv.fileForClusterModel, index=False, encoding='utf-8')
+	rawDataFrame = pd.read_csv(pv.fileForClusterModel, sep=',',encoding='utf-8')
+	simMat = cm.getSimilarityMatrix(sparkContext, rawDataFrame)
+	fp.recordSimMatrix(simMat, pv.simMatrixFile)
+
+
 def train(sparkContext):
 	fp.truncate(pv.mergedAccountFile, pv.truncatedFile, pv.truncateLineCount)
 
