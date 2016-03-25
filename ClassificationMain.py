@@ -73,6 +73,14 @@ def merge(targetFile, files):
 
 	Utils.logMessage("\nMerge account finished")
 
+def trainWithDF(sparkContext, dataframe):
+	Utils.logMessage("\nClassification model started")
+	dataframe.to_csv(pv.processedFile, header=False, index=False,encoding='utf-8')
+	truncatedAccounts = sparkContext.textFile(pv.processedFile).take(pv.truncateLineCount - 1)
+	rawData = sparkContext.parallelize(truncatedAccounts).map(countByFeatures).map(lambda item: LabeledPoint(item[0], Vectors.dense(item[2:])))
+
+	trainWithParam(sparkContext, rawData, 0.7, 'entropy', 4, 16)
+
 def train(sparkContext):
 	Utils.logMessage("\nClassification model started")
 	pd.read_table(pv.processedFile, sep=',',encoding='utf-8').to_csv(pv.processedFile, header=False, index=False,encoding='utf-8')
@@ -107,12 +115,10 @@ def DecisionTreeProcess(trainingSet, testSet, imp, dtMaxDepth, dtMaxBins):
 
 	predictions = decisionTreeModel.predict(trainingSet.map(lambda item: item.features))
 	trainingLabelsAndPredictions = trainingSet.map(lambda item: item.label).zip(predictions)
-	#eva.classificationModelMeasurements("Training set", trainingLabelsAndPredictions)
 	eva.calculateErrorRate("\nClassification model Training set", trainingLabelsAndPredictions)
 
 	predictions = decisionTreeModel.predict(testSet.map(lambda item: item.features))
 	testLabelsAndPredictions = testSet.map(lambda item: item.label).zip(predictions)
-	#eva.classificationModelMeasurements("Test set", testLabelsAndPredictions)
 	eva.calculateErrorRate("\nClassification model Test set", testLabelsAndPredictions)
 
 	return decisionTreeModel

@@ -37,6 +37,14 @@ def getSimilarityMatrixByRDD(sparkContext, rawDataFrame):
 	return np.matrix(simMat)
 
 
+def getSimilarityByRDD(sparkContext, rawDataFrame):
+	vals = rawDataFrame[:-1].to_records(True, False).tolist()
+	current = rawDataFrame[-1:].to_records(True, False).tolist()
+	broadcastData = sparkContext.broadcast(current)
+	rawData = sparkContext.parallelize(vals)
+	return rawData.map(lambda item: calculateSimVector(item, broadcastData)).sortBy(lambda item: item[0]).map(lambda item : item[1]).collect()
+
+
 def calculateSimVector(curRecord, broadcastData):
 	vals = broadcastData.value
 	simVector = []

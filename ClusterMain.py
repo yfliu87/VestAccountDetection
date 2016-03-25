@@ -22,37 +22,33 @@ optimalBin = None
 
 
 def calculateSimMat(sparkContext, dataframe):
-	#fp.truncate(pv.mergedAccountFile, pv.truncatedFile, pv.truncateLineCount)
-	#fp.preprocess(pv.truncatedFile, pv.processedFile, pv.targetFields)
-	#pd.read_csv(pv.trainingFile, sep=',',encoding='utf-8').to_csv(pv.fileForClusterModel, index=False, encoding='utf-8')
-	#rawDataFrame = pd.read_csv(pv.fileForClusterModel, sep=',',encoding='utf-8')
 	simMat = cm.getSimilarityMatrix(sparkContext, dataframe)
 	fp.recordSimMatrix(simMat, pv.simMatrixFile)
 
 
+def trainWithDF(sparkContext, rawDataFrame):
+	simMat = cm.getSimilarityMatrixByRDD(sparkContext, rawDataFrame)
+	fp.recordSimMatrix(simMat, pv.simMatrixFile)
+	model, unifiedRDDVecs = cluster.getClusterModel(sparkContext, simMat, rawDataFrame, (pv.truncateLineCount/pv.IDFOREACHCLUSTER), pv.dimensionReductionNum, pv.eigenVecFile)
+	eva.evaluateModel(model, unifiedRDDVecs)
+	fp.outputNodesInSameCluster(model, unifiedRDDVecs, rawDataFrame, pv.clusterIDCenterFile, pv.clusterIDFile)
+	decisionTreeModel = classification.process(sparkContext, (pv.truncateLineCount/pv.IDFOREACHCLUSTER), pv.treeMaxDepth, pv.treeMaxBins, pv.eigenVecFile, pv.clusterIDFile)
+	model.save(sparkContext, pv.clusterModelPath)
+	Utils.logMessage("\nTrain cluster model finished")
+
+
 def train(sparkContext):
 	fp.truncate(pv.mergedAccountFile, pv.truncatedFile, pv.truncateLineCount)
-
 	fp.preprocess(pv.truncatedFile, pv.processedFile, pv.targetFields)
-
 	pd.read_csv(pv.trainingFile, sep=',',encoding='utf-8').to_csv(pv.fileForClusterModel, index=False, encoding='utf-8')
-
 	rawDataFrame = pd.read_csv(pv.fileForClusterModel, sep=',',encoding='utf-8')
-
 	simMat = cm.getSimilarityMatrix(sparkContext, rawDataFrame)
-
 	fp.recordSimMatrix(simMat, pv.simMatrixFile)
-
 	model, unifiedRDDVecs = cluster.getClusterModel(sparkContext, simMat, rawDataFrame, (pv.truncateLineCount/pv.IDFOREACHCLUSTER), pv.dimensionReductionNum, pv.eigenVecFile)
-
 	eva.evaluateModel(model, unifiedRDDVecs)
-
 	fp.outputNodesInSameCluster(model, unifiedRDDVecs, rawDataFrame, pv.clusterIDCenterFile, pv.clusterIDFile)
-
 	decisionTreeModel = classification.process(sparkContext, (pv.truncateLineCount/pv.IDFOREACHCLUSTER), pv.treeMaxDepth, pv.treeMaxBins, pv.eigenVecFile, pv.clusterIDFile)
-
 	model.save(sparkContext, pv.clusterModelPath)
-
 	Utils.logMessage("\nTrain cluster model finished")
 
 
